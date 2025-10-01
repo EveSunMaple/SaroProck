@@ -58,7 +58,7 @@ export async function GET({ props }: APIContext<{ post: CollectionEntry<"blog"> 
               },
               {
                 type: "div",
-                props: { style: { fontSize: "28px", fontWeight: 600 }, children: "サン猫の時間漂流" },
+                props: { style: { fontSize: "28px", fontWeight: 600 }, children: "光影伴行簿" },
               },
             ],
           },

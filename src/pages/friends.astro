@@ -6,32 +6,21 @@ import { Icon } from "astro-icon/components";
 // 友链数据 (保持不变)
 const mainLinks = [
   {
-    id: "weichky",
-    name: "Weichky's Blog",
-    avatar: "https://assets.weichky.com/imgs/favicon.png",
+    id: "xiaolii",
+    name: "小理の小窝",
+    avatar: "https://source.xiaolii.com/Imagesource/icon.jpg",
     desc: "物不可穷也，故受之以未济。",
-    url: "https://blog.weichky.com",
+    url: "https://xiaolii.com",
     story:
-      "一封邮件，打开了消失已久的「友人帐」的扉页。我很久以前曾默默删掉了友链页面，现在看到，一想，如果，真的是友情链接，而不是……或许也没那么糟糕。99+ 文章的博客，值得放在这里。",
-  },
-  {
-    id: "meowlynxsea",
-    name: "梦凌汐",
-    avatar: "https://avatars.githubusercontent.com/u/169180836?v=4",
-    desc: "一只来自宇宙边缘、在地球旅行的程序猫",
-    url: "https://meowdream.cn/",
-    story:
-      "想了很久，不知道怎么写……对我来说，好像母亲，或者是朋友。也许，这就是稳定、安心的确定性吧。",
+      "一个普通学生的普通生活",
   },
 ];
 
 const secondaryLinks = [
-  { id: "tnxg", name: "天翔TNXGの自留地", url: "https://www.tnxg.top" },
-  { id: "yirween", name: "Yirween", url: "https://yirween.netlify.app/" },
-  { id: "fanzhuo", name: "Fanzhuo", url: "https://blog.fanzhuo.xyz/" },
+  { id:"ericzhao", name: "小赵", url: "https://www.ericzhao3366.work" },
 ];
 
-const EMAIL = "evesunmaple@outlook.com";
+const EMAIL = "ericzhao3366@dingtalk.com";
 ---
 
 <Layout title="友人帐" description="我与朋友们的相遇与故事。">
@@ -170,11 +159,11 @@ const EMAIL = "evesunmaple@outlook.com";
                       class="inline w-4 h-4 mr-1 text-info"
                     />
                     <a
-                      href="https://saro.pub/me"
+                      href="https://blog.ericzhao3366.work"
                       target="_blank"
                       rel="noopener noreferrer"
-                      class="link link-hover font-semibold">サン猫の時間漂流</a
-                    > (https://saro.pub/me)
+                      class="link link-hover font-semibold">光影伴行簿</a
+                    > (https://blog.ericzhao3366.work)
                   </li>
                 </ul>
               </div>
@@ -193,7 +182,7 @@ const EMAIL = "evesunmaple@outlook.com";
                     type="text"
                     id="name"
                     name="name"
-                    placeholder="サン猫の時間漂流"
+                    placeholder="光影伴行簿"
                     class="input input-bordered w-full rounded-lg"
                     required
                   />

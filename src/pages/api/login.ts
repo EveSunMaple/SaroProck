@@ -8,7 +8,7 @@ export async function POST({ request }: APIContext): Promise<Response> {
     const { nickname, email, password } = await request.json();
 
     const secretPassword = import.meta.env.SECRET_ADMIN_PASSWORD;
-    const SENSITIVE_USERS = ["evesunmaple", "EveSunMaple", "sunmaple", "SunMaple", "admin", "博主", "evesunmaple@outlook.com"];
+    const SENSITIVE_USERS = ["ericzhao", "ericzhao3366", "EricZhao3366", "ERICZHAO","EricZhao", "admin", "博主", "ericzhao3366@dingtalk.com"];
 
     // 检查是否为敏感用户
     const isSensitive = SENSITIVE_USERS.includes(nickname.trim().toLowerCase()) || SENSITIVE_USERS.includes(email.trim().toLowerCase());

@@ -17,8 +17,8 @@ async function getRepoStars(): Promise<number | null> {
     return cachedData.stars;
   }
   try {
-    const owner = "EveSunMaple";
-    const repo = "SaroProck";
+    const owner = "Eric-Zhao-3366";
+    const repo = "BlogNew";
     const token = import.meta.env.GITHUB_TOKEN;
     const response = await fetch(
       `https://api.github.com/repos/${owner}/${repo}`,
@@ -86,12 +86,12 @@ const socialLinks = [
           </a>
         </div>
         <div class="text-sm text-base-content/70">
-          <p>一个孤独的地方，散落着一个人的人生碎片。</p>
+          <p>用光影，伴随前行的脚步，记录生活的点滴。</p>
           <p>感谢你的漂流至此，希望这里的文字能为你带来片刻的宁静或思考。</p>
         </div>
         <div class="mt-4">
           <a
-            href="https://github.com/EveSunMaple/SaroProck"
+            href="https://github.com/Eric-Zhao-3366/BlogNew"
             target="_blank"
             rel="noopener noreferrer"
             class="btn btn-outline btn-sm rounded-full group"
