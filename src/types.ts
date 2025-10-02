@@ -47,35 +47,6 @@ export interface ChannelInfo {
   photos: number | null;
   posts: TelegramPost[];
 }
-// 新增：将媒体文件的域名替换为指定域（默认 image.shinji.ren）
-export function replaceMediaDomain(
-  media: MediaFile | MediaFile[],
-  domain = "image.shinji.ren"
-): MediaFile | MediaFile[] {
-  const replaceHost = (u?: string) => {
-    if (!u) return u;
-    try {
-      // 处理 protocol-relative URL（//host/path）
-      const parsed = u.startsWith("//") ? new URL(u, "http:") : new URL(u);
-      parsed.hostname = domain;
-      return parsed.toString();
-    } catch {
-      // 若 URL 构造失败（相对路径等），退回到正则替换 host 部分
-      return u.replace(/^((https?:)\/\/)[^/]+/, `$1${domain}`);
-    }
-  };
-
-  const processOne = (m: MediaFile): MediaFile => ({
-    ...m,
-    url: replaceHost(m.url),
-    thumbnail: m.thumbnail ? replaceHost(m.thumbnail) : m.thumbnail,
-  });
-
-  if (Array.isArray(media)) {
-    return media.map(processOne);
-  }
-  return processOne(media);
-}
 
 // Astro 全局 locals 类型（用于 SSR）
 // 这可以让你在所有组件中安全地访问环境变量
