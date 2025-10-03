@@ -3,6 +3,20 @@ import type { Element } from "domhandler";
 import type { LinkPreview, MediaFile, Reply, TelegramPost } from "@/types";
 import dayjs from "./dayjs-setup";
 
+// 将 URL 的主机名替换为 image.shinji.ren，保留路径与查询
+function toImageHost(u?: string): string | undefined {
+  if (!u) return u;
+  try {
+    const url = u.startsWith("//") ? new URL(u, "https:") : new URL(u);
+    url.protocol = "https:";
+    url.hostname = "image.shinji.ren";
+    return url.toString();
+  } catch {
+    // 非绝对 URL 时原样返回；绝对 http(s) 时回退替换 host
+    return /^https?:\/\//i.test(u) ? u.replace(/^https?:\/\/[^/]+/i, "https://image.shinji.ren") : u;
+  }
+}
+
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
     const url = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
