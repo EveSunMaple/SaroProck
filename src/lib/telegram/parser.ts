@@ -8,7 +8,7 @@ function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
     // 用正则提取 /file/ 及其后面的内容
     const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
     // 如果需要拼接 image.shinji.ren 域名
-    const url = filePath ? `https://image.shinji.ren${filePath}` : undefined;
+    const url = filePath ? `https://tgimg.shinji.ren${filePath}` : undefined;
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
