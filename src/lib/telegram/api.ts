@@ -33,6 +33,7 @@ export async function fetchTelegramHtml(
 
   const host = getEnv(Astro, "TELEGRAM_HOST") ?? "t.me";
   const channel = getEnv(Astro, "CHANNEL");
+  const staticProxy = getEnv( Astro, 'STATIC_PROXY') ?? 'cdn5.telesco.pe'
 
   if (!channel) {
     throw new Error("CHANNEL environment variable is not set.");
@@ -45,6 +46,8 @@ export async function fetchTelegramHtml(
   const proxyUrl = getEnv(Astro, "HTTP_PROXY");
   const dispatcher = proxyUrl ? new ProxyAgent(proxyUrl) : undefined;
   const headers = Object.fromEntries(Astro.request.headers);
+  const match = url.match(/\/file\/.+/);
+  const filePath = match ? match[0] : null;
 
   const html = await $fetch<string>(url, {
     headers,

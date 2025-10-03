@@ -2,24 +2,13 @@ import type { Cheerio, CheerioAPI } from "cheerio";
 import type { Element } from "domhandler";
 import type { LinkPreview, MediaFile, Reply, TelegramPost } from "@/types";
 import dayjs from "./dayjs-setup";
-
-// 将 URL 的主机名替换为 image.shinji.ren，保留路径与查询
-function toImageHost(u?: string): string | undefined {
-  if (!u) return u;
-  try {
-    const url = u.startsWith("//") ? new URL(u, "https:") : new URL(u);
-    url.protocol = "https:";
-    url.hostname = "image.shinji.ren";
-    return url.toString();
-  } catch {
-    // 非绝对 URL 时原样返回；绝对 http(s) 时回退替换 host
-    return /^https?:\/\//i.test(u) ? u.replace(/^https?:\/\/[^/]+/i, "https://image.shinji.ren") : u;
-  }
-}
-
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
-    const url = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
+    const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
+    // 用正则提取 /file/ 及其后面的内容
+    const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
+    // 如果需要拼接 image.shinji.ren 域名
+    const url = filePath ? `https://image.shinji.ren${filePath}` : undefined;
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
