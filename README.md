@@ -131,6 +131,10 @@ SECRET_ADMIN_PASSWORD=<设置一个强的管理员密码>
 # 如果你使用自定义的数据统计或链接缩短服务，请配置以下选项
 SINK_PUBLIC_URL=<你的 Sink 服务公开访问 URL>
 SINK_API_KEY=<你的 Sink 服务 API 密钥>
+
+# Telegram图片代理
+# 用于某些地区无法直接访问 Telegram 图片资源的情况
+STATIC_PROXY=<你的图片代理 URL，默认 https://cdn5.telesco.pe>
 ```
 
 ---

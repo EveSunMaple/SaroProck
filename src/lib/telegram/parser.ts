@@ -3,9 +3,16 @@ import type { Element } from "domhandler";
 import type { LinkPreview, MediaFile, Reply, TelegramPost } from "@/types";
 import dayjs from "./dayjs-setup";
 
+const STATIC_PROXY =
+  (import.meta as any)?.env?.STATIC_PROXY ||
+  (typeof process !== "undefined" ? (process as any)?.env?.STATIC_PROXY : undefined) ||
+  "https://cdn5.telesco.pe";
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
-    const url = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
+    const rawUrl = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
+    // 用正则提取 /file/ 及其后面的内容
+    const filePath = rawUrl?.match(/\/file\/.+/i)?.[0];
+    const url = filePath ? `${STATIC_PROXY}${filePath}` : undefined;
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
@@ -13,12 +20,19 @@ function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
 function parseVideos(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   const videos: MediaFile[] = [];
   item.find(".tgme_widget_message_video_wrap video").each((_, video) => {
-    const url = $(video).attr("src");
-    if (url) {
+    const src = $(video).attr("src");
+    if (src) {
+      const filePath = src.match(/\/file\/.+/i)?.[0];
+      const url = filePath ? `${STATIC_PROXY}${filePath}` : src;
+
+      const poster = $(video).attr("poster") || undefined;
+      const thumbPath = poster?.match(/\/file\/.+/i)?.[0];
+      const thumbnail = poster ? (thumbPath ? `${STATIC_PROXY}${thumbPath}` : poster) : undefined;
+
       videos.push({
         type: "video",
         url,
-        thumbnail: $(video).attr("poster") || undefined,
+        thumbnail,
       });
     }
   });
