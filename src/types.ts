@@ -19,9 +19,13 @@ export interface LinkPreview {
 
 // 回复对象
 export interface Reply {
-  url: string; // 指向被回复消息的链接
-  author: string;
-  text: string;
+  url: string; // 链接（站内或外部）
+  author: string; // 作者名称
+  html: string; // 回复内容的 HTML（保留 emoji）
+  thumb?: string; // 缩略图
+  isExternal?: boolean; // 是否外部频道
+  targetChannel?: string; // 被回复的频道
+  targetId?: string; // 被回复的消息 ID
 }
 
 // 单条 Telegram 动态

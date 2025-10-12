@@ -9,6 +9,7 @@ interface Props {
   post: TelegramPost;
   isLastItem?: boolean;
 }
+
 const { post, isLastItem = false } = Astro.props;
 ---
 
@@ -22,11 +23,9 @@ const { post, isLastItem = false } = Astro.props;
           <img src="/avatar.webp" alt="Channel Avatar" />
         </div>
       </div>
-      {
-        !isLastItem && (
-          <div class="w-0.5 flex-1 bg-primary/30 rounded-full min-h-[1.5rem]" />
-        )
-      }
+      {!isLastItem && (
+        <div class="w-0.5 flex-1 bg-primary/30 rounded-full min-h-[1.5rem]" />
+      )}
     </div>
 
     <div
@@ -43,21 +42,43 @@ const { post, isLastItem = false } = Astro.props;
           <span class="text-xs text-base-content/60">{post.formattedDate}</span>
         </a>
 
-        {
-          post.reply && (
-            <a
-              href={post.reply.url}
-              class="block not-prose no-underline mb-2 group/reply"
-            >
-              <blockquote class="text-xs p-2 bg-base-300/30 rounded-md border-l-2 border-primary group-hover/reply:bg-base-300/50 transition-colors">
-                <p class="font-bold text-base-content">{post.reply.author}</p>
-                <p class="opacity-70 truncate text-base-content/80">
-                  {post.reply.text}
-                </p>
-              </blockquote>
-            </a>
-          )
-        }
+        {post.reply && (
+  <a
+    href={post.reply.url}
+    class="block not-prose no-underline mb-2 group/reply"
+    target={post.reply.isExternal ? "_blank" : "_self"}
+    rel={post.reply.isExternal ? "noopener noreferrer" : undefined}
+  >
+    <blockquote
+      class:list={[
+        "text-xs p-2 rounded-md border-l-2 transition-colors flex items-center gap-2",
+        post.reply.isExternal
+          ? "bg-warning/10 border-warning group-hover/reply:bg-warning/20"
+          : "bg-base-300/30 border-primary group-hover/reply:bg-base-300/50",
+      ]}
+    >
+      {post.reply.thumb && (
+        <img
+          src={post.reply.thumb}
+          alt="Reply thumbnail"
+          class="w-8 h-8 rounded-md flex-shrink-0 object-cover"
+        />
+      )}
+
+      <div>
+        <p class="font-bold text-base-content">
+          {post.reply.author}
+          {post.reply.isExternal && (
+            <span class="ml-1 text-[0.65rem] px-1.5 py-0.5 rounded bg-warning/10 text-warning border border-warning/20">
+              外部频道
+            </span>
+          )}
+        </p>
+        <p class="opacity-70 truncate text-base-content/80" set:html={post.reply.html} />
+      </div>
+    </blockquote>
+  </a>
+)}
 
         <div
           class="prose prose-sm max-w-none mb-3 text-base-content/80 text-sm leading-relaxed"
