@@ -101,3 +101,8 @@ code {
 .animate-like-pulse {
   animation: like-pulse 0.4s ease-in-out;
 }
+
+i.emoji {
+  font-style: normal !important;
+  vertical-align: middle;
+}

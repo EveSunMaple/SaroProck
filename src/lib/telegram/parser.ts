@@ -5,7 +5,7 @@ import dayjs from "./dayjs-setup";
 
 function parseImages(item: Cheerio<Element>, $: CheerioAPI): MediaFile[] {
   return item.find(".tgme_widget_message_photo_wrap").map((_, photo) => {
-    const url = $(photo).attr("style")?.match(/url\\(["'](.*?)["']\\)/)?.[1];
+    const url = $(photo).attr("style")?.match(/url\(["'](.*?)["']/)?.[1];
     return url ? { type: "image", url } : null;
   }).get().filter(Boolean) as MediaFile[];
 }
@@ -48,6 +48,10 @@ function parseReply(item: Cheerio<Element>, $: CheerioAPI, channel: string): Rep
   const reply = item.find(".tgme_widget_message_reply");
   if (reply.length === 0)
     return undefined;
+
+  reply.find("i.emoji").each((_, el) => {
+    $(el).removeAttr("style");
+  });
 
   const href = reply.attr("href");
   if (!href)
@@ -153,17 +157,17 @@ export function parsePost(element: Element, $: CheerioAPI, channel: string): Tel
 
   textElement.find(".tgme_widget_message_photo_wrap, .tgme_widget_message_video_wrap").remove();
 
+  textElement.find("i.emoji").each((_, el) => {
+    $(el).removeAttr("style");
+  });
+
   const unsupportedMediaHtml = parseUnsupportedMedia(item, $, postLink);
 
   return {
     id,
     datetime,
     formattedDate,
-    text: item
-      .find(".tgme_widget_message_text")
-      .filter((_, el) => !el.attribs.class.includes("js-message_reply_text"))
-      .text()
-      .trim() || "",
+    text: item.find(".tgme_widget_message_text").text() || "",
     htmlContent: (textElement.html() || "") + unsupportedMediaHtml,
     views: item.find(".tgme_widget_message_views").text() || "0",
     media: [...parseImages(item, $), ...parseVideos(item, $)],
