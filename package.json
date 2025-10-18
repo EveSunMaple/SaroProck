@@ -43,6 +43,7 @@
     "lru-cache": "^11.1.0",
     "marked": "^16.0.0",
     "md5": "^2.3.0",
+    "music-metadata": "^11.9.0",
     "ofetch": "^1.4.1",
     "react": "^19.1.0",
     "react-dom": "^19.1.0",
