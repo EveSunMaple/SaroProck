@@ -58,7 +58,9 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
 
     fetchInitialState();
 
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, [postId]);
 
   const handleClick = async () => {
