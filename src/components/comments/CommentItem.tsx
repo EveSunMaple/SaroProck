@@ -2,6 +2,7 @@ import type { CommentData } from "./CommentsWrapper";
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import React, { useState } from "react";
+import { SENSITIVE_USERS } from "@/config";
 import CommentForm from "./CommentForm";
 
 // 头像代理函数
@@ -35,7 +36,13 @@ const badgeMap: { [key: string]: string } = {
 // 重命名为 CommentItemComponent 以便在文件内部递归调用
 const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded, displayMode }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
+  const SENSITIVE_USERS_LOWER = SENSITIVE_USERS.map(u => u.toLowerCase());
+  const userNicknameLower = (comment.nickname || "").toLowerCase();
+  const userEmailLower = (comment.email || "").toLowerCase();
 
+  const isImpersonator = !comment.isAdmin
+    && (SENSITIVE_USERS_LOWER.includes(userNicknameLower)
+      || SENSITIVE_USERS_LOWER.includes(userEmailLower));
   // --- 留言板卡片模式 ---
   if (displayMode === "guestbook") {
     const hasReplies = comment.children && comment.children.length > 0;
@@ -49,7 +56,15 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
             </a>
             <div className="min-w-0">
               <p className="font-semibold truncate">{comment.nickname}</p>
-              {badgeMap[comment.email] && <span className="badge badge-primary badge-sm ml-2">{badgeMap[comment.email]}</span>}
+              {comment.isAdmin
+                ? (
+                    <span className="badge badge-primary badge-sm ml-2">博主</span>
+                  )
+                : isImpersonator
+                  ? (
+                      <span className="badge badge-warning badge-sm ml-2">伪装者</span>
+                    )
+                  : null}
             </div>
           </div>
           <time className="text-sm text-base-content/60 shrink-0 ml-2 pt-1" title={format(comment.createdAt, "yyyy年MM月dd日 HH:mm")}>
@@ -57,7 +72,7 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
           </time>
         </header>
 
-        <main className="prose prose-sm max-w-none px-4 pb-4 flex-grow" dangerouslySetInnerHTML={{ __html: comment.content }}></main>
+        <main className="prose prose-sm max-w-none px-4 pb-4 flex-grow break-all" dangerouslySetInnerHTML={{ __html: comment.content }}></main>
 
         <footer className="flex items-end justify-end p-4 pt-0 mt-auto">
           <div className="flex items-center">
@@ -120,7 +135,7 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
           <div className="flex-1 min-w-0 bg-base-100/50 px-2 py-1 rounded-lg">
             <p className="text-sm">
               <span className="font-semibold mr-1.5">{comment.nickname}</span>
-              <span className="text-base-content/80" dangerouslySetInnerHTML={{ __html: comment.content.replace(/<p>(.*?)<\/p>/g, "$1") }}></span>
+              <span className="text-base-content/80 break-all" dangerouslySetInnerHTML={{ __html: comment.content.replace(/<p>(.*?)<\/p>/g, "$1") }}></span>
             </p>
           </div>
         </div>
@@ -140,9 +155,17 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
               {comment.website ? <a href={comment.website} className="font-semibold text-primary hover:underline truncate" target="_blank" rel="noopener noreferrer">{comment.nickname}</a> : <span className="font-semibold truncate">{comment.nickname}</span>}
-              {badgeMap[comment.email] && <div className="badge badge-primary badge-sm ml-2">{badgeMap[comment.email]}</div>}
+              {comment.isAdmin
+                ? (
+                    <div className="badge badge-primary badge-sm ml-2">博主</div>
+                  )
+                : isImpersonator
+                  ? (
+                      <div className="badge badge-warning badge-sm ml-2">伪装者</div>
+                    )
+                  : null}
             </div>
-            <div className="prose prose-sm max-w-none mb-3" dangerouslySetInnerHTML={{ __html: comment.content }}></div>
+            <div className="prose prose-sm max-w-none mb-3 break-all" dangerouslySetInnerHTML={{ __html: comment.content }}></div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-base-content/60">{format(comment.createdAt, "yyyy年MM月dd日 HH:mm", { locale: zhCN })}</span>
               <div className="flex items-center gap-1">

@@ -1,6 +1,5 @@
 import type { APIContext } from "astro";
 import { parse, serialize } from "cookie";
-// src/lib/auth.ts
 import jwt from "jsonwebtoken";
 
 const JWT_SECRET = import.meta.env.JWT_SECRET;
