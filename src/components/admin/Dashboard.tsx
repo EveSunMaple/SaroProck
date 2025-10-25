@@ -64,13 +64,13 @@ const Dashboard: React.FC = () => {
         setLoading(true);
 
         // 1. 获取总览数据 (不带时间参数，获取所有时间)
-        const statsPromise = fetch("/api/admin/stats").then(res => res.ok ? res.json() : null);
+        const statsPromise = fetch("/api/admin/stats").then((res) => res.ok ? res.json() : null);
 
         // 2. 获取详细数据 (全部带上 period 参数)
-        const viewsPromise = fetch(`/api/admin/sink-details?report=views&unit=day&period=${period}`).then(res => res.ok ? res.json() : null);
-        const referersPromise = fetch(`/api/admin/sink-details?report=metrics&type=referer&limit=5&period=${period}`).then(res => res.ok ? res.json() : null);
-        const countriesPromise = fetch(`/api/admin/sink-details?report=metrics&type=country&limit=5&period=${period}`).then(res => res.ok ? res.json() : null);
-        const osPromise = fetch(`/api/admin/sink-details?report=metrics&type=os&limit=5&period=${period}`).then(res => res.ok ? res.json() : null);
+        const viewsPromise = fetch(`/api/admin/sink-details?report=views&unit=day&period=${period}`).then((res) => res.ok ? res.json() : null);
+        const referersPromise = fetch(`/api/admin/sink-details?report=metrics&type=referer&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
+        const countriesPromise = fetch(`/api/admin/sink-details?report=metrics&type=country&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
+        const osPromise = fetch(`/api/admin/sink-details?report=metrics&type=os&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
 
         // 并行等待所有请求完成
         const [

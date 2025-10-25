@@ -100,7 +100,7 @@ export const POST: APIRoute = async ({ request, site }) => {
       .filter((r): r is SearchResult => r !== null)
       .sort((a, b) => b.matchScore - a.matchScore || a.title.localeCompare(b.title));
 
-    const formattedResults = filteredResults.map(result => ({
+    const formattedResults = filteredResults.map((result) => ({
       ...result,
       keywords,
     }));

@@ -71,7 +71,7 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
     const deviceId = getDeviceId();
 
     setHasLiked(newLikedState);
-    setLikeCount(prev => newLikedState ? prev + 1 : Math.max(0, prev - 1));
+    setLikeCount((prev) => newLikedState ? prev + 1 : Math.max(0, prev - 1));
 
     if (newLikedState) {
       setIsClicked(true);
@@ -107,7 +107,7 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
     catch (error) {
       console.error("Failed to submit like:", error);
       setHasLiked(!newLikedState);
-      setLikeCount(prev => newLikedState ? prev - 1 : prev + 1);
+      setLikeCount((prev) => newLikedState ? prev - 1 : prev + 1);
     }
     finally {
       setIsSubmitting(false);

@@ -77,7 +77,7 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
       <form onSubmit={handleSubmit} className="reply-form space-y-3">
         <textarea
           value={content}
-          onChange={e => setContent(e.target.value)}
+          onChange={(e) => setContent(e.target.value)}
           className="textarea textarea-bordered rounded-lg h-20 w-full text-sm"
           required
           minLength={2}
@@ -86,9 +86,24 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
         >
         </textarea>
         <div className="flex justify-end items-center gap-2">
-          <button type="button" onClick={onCancelReply} className="btn btn-ghost btn-sm rounded-lg">取消</button>
-          <button type="submit" className="btn btn-primary btn-sm rounded-lg" disabled={submitting}>
-            {submitting ? <span className="loading loading-spinner loading-xs"></span> : "回复"}
+          <button type="button" onClick={onCancelReply} className="btn btn-ghost btn-sm rounded-lg">
+            <i className="ri-close-line" />
+            取消
+          </button>
+          <button type="submit" className="btn btn-primary btn-sm rounded-lg gap-1" disabled={submitting}>
+            {submitting
+              ? (
+                  <>
+                    <span className="loading loading-spinner loading-xs" />
+                    发送中...
+                  </>
+                )
+              : (
+                  <>
+                    <i className="ri-send-plane-2-line" />
+                    回复
+                  </>
+                )}
           </button>
         </div>
       </form>
@@ -105,7 +120,7 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
             placeholder="留下你的想法..."
             className="input input-sm w-full rounded-md text-xs"
             value={content}
-            onChange={e => setContent(e.target.value)}
+            onChange={(e) => setContent(e.target.value)}
             required
           />
           <button type="submit" className="btn btn-primary btn-sm btn-circle shrink-0" disabled={submitting || loading} aria-label="发送评论">
@@ -129,14 +144,29 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
             </p>
             <p className="text-xs text-base-content/60">{user.email}</p>
           </div>
-          <button onClick={logout} className="btn btn-ghost btn-sm rounded-lg">登出</button>
+          <button onClick={logout} className="btn btn-ghost btn-sm rounded-lg">
+            <i className="ri-logout-circle-line" />
+            登出
+          </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <textarea value={content} onChange={e => setContent(e.target.value)} className="textarea textarea-bordered rounded-xl h-24 w-full" required minLength={2} placeholder="留下你的评论..."></textarea>
+          <textarea value={content} onChange={(e) => setContent(e.target.value)} className="textarea textarea-bordered rounded-xl h-24 w-full" required minLength={2} placeholder="留下你的评论..."></textarea>
           <div className="flex justify-between items-center">
             <span className="text-xs text-base-content/60">支持 Markdown</span>
-            <button type="submit" className="btn btn-primary btn-sm rounded-lg" disabled={submitting || loading}>
-              {submitting ? "发送中..." : "发送"}
+            <button type="submit" className="btn btn-primary btn-sm rounded-lg gap-1" disabled={submitting || loading}>
+              {submitting
+                ? (
+                    <>
+                      <span className="loading loading-spinner loading-xs" />
+                      发送中...
+                    </>
+                  )
+                : (
+                    <>
+                      <i className="ri-send-plane-2-line" />
+                      发送
+                    </>
+                  )}
             </button>
           </div>
         </form>

@@ -8,7 +8,7 @@ export const prerender = true;
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await getCollection("blog");
-  return posts.map(post => ({
+  return posts.map((post) => ({
     params: { slug: post.slug },
     props: { post }, // 将整篇 post 数据传递给 GET 函数
   }));

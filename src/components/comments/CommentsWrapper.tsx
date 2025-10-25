@@ -107,9 +107,9 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
         const flatten = (comment: CommentData, level: number) => {
           const { children, ...rest } = comment;
           flattenedComments.push({ ...rest, level } as CommentData);
-          children.forEach(child => flatten(child, level + 1));
+          children.forEach((child) => flatten(child, level + 1));
         };
-        rootComments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()).forEach(c => flatten(c, 0));
+        rootComments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()).forEach((c) => flatten(c, 0));
         setComments(flattenedComments);
       }
     }
@@ -151,7 +151,7 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
         return node;
       });
     };
-    setComments(prevComments => updateLikesRecursively(prevComments));
+    setComments((prevComments) => updateLikesRecursively(prevComments));
 
     try {
       const response = await fetch("/api/comments/like", {

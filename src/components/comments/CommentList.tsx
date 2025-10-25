@@ -46,7 +46,7 @@ const CommentList: React.FC<Props> = ({ comments, onLike, onCommentAdded, displa
   if (displayMode === "guestbook") {
     return (
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
-        {comments.map(comment => (
+        {comments.map((comment) => (
           <CommentItem
             key={comment.id}
             comment={comment}
@@ -61,7 +61,7 @@ const CommentList: React.FC<Props> = ({ comments, onLike, onCommentAdded, displa
 
   return (
     <div className={`space-y-2 ${displayMode === "full" ? "mt-8" : "mt-4"}`}>
-      {comments.map(comment => (
+      {comments.map((comment) => (
         <CommentItem
           key={comment.id}
           comment={comment}

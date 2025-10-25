@@ -10,5 +10,6 @@ export default antfu({
     // Ignore the antfu/top-level-function rule
     "antfu/top-level-function": "off",
     "arrow-parens": ["warn", "always"],
+    "style/arrow-parens": "off",
   },
 });

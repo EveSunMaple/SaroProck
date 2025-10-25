@@ -16,7 +16,7 @@ async function generateShortHash(input: string): Promise<string> {
 
   // 将哈希值转换为16进制字符串
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hexHash = hashArray.map(b => b.toString(16).padStart(2, "0")).join("");
+  const hexHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 
   // 返回哈希值的前7位，这足以在大多数情况下保证唯一性
   return hexHash.substring(0, 7);

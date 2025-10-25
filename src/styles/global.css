@@ -25,6 +25,10 @@
   font-style: normal;
 }
 
+pre {
+  @apply mockup-code;
+}
+
 code {
   font-family: "Maple", monospace;
   font-size: 0.875rem;

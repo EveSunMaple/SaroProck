@@ -1,9 +1,12 @@
 import type { CommentData } from "./CommentsWrapper";
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import React, { useState } from "react";
+import hljs from "highlight.js";
+import React, { useEffect, useRef, useState } from "react";
 import { SENSITIVE_USERS } from "@/config";
 import CommentForm from "./CommentForm";
+import "highlight.js/styles/github.css"; // 亮色模式
+import "highlight.js/styles/github-dark.css"; // 暗色模式
 
 // 头像代理函数
 function proxyAvatar(url: string | undefined): string {
@@ -29,20 +32,27 @@ interface Props {
   displayMode: "full" | "compact" | "guestbook";
 }
 
-const badgeMap: { [key: string]: string } = {
-  "evesunmaple@outlook.com": "博主",
-};
-
 // 重命名为 CommentItemComponent 以便在文件内部递归调用
 const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded, displayMode }) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
-  const SENSITIVE_USERS_LOWER = SENSITIVE_USERS.map(u => u.toLowerCase());
+
+  const SENSITIVE_USERS_LOWER = SENSITIVE_USERS.map((u) => u.toLowerCase());
   const userNicknameLower = (comment.nickname || "").toLowerCase();
   const userEmailLower = (comment.email || "").toLowerCase();
 
   const isImpersonator = !comment.isAdmin
     && (SENSITIVE_USERS_LOWER.includes(userNicknameLower)
       || SENSITIVE_USERS_LOWER.includes(userEmailLower));
+
+  const contentRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (contentRef.current) {
+      contentRef.current.querySelectorAll("pre code").forEach((block) => {
+        hljs.highlightElement(block as HTMLElement);
+      });
+    }
+  }, [comment.content]);
   // --- 留言板卡片模式 ---
   if (displayMode === "guestbook") {
     const hasReplies = comment.children && comment.children.length > 0;
@@ -92,7 +102,7 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
             {/* 渲染子评论 */}
             {hasReplies && (
               <div className="space-y-2 max-h-60 overflow-y-auto pr-2 -mr-2 custom-scrollbar">
-                {comment.children.map(childComment => (
+                {comment.children.map((childComment) => (
                   <CommentItemComponent
                     key={childComment.id}
                     comment={childComment}
@@ -165,7 +175,12 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
                     )
                   : null}
             </div>
-            <div className="prose prose-sm max-w-none mb-3 break-all" dangerouslySetInnerHTML={{ __html: comment.content }}></div>
+            <div
+              ref={contentRef}
+              className="prose prose-sm mb-3 break-all overflow-x-auto"
+              dangerouslySetInnerHTML={{ __html: comment.content }}
+            >
+            </div>
             <div className="flex justify-between items-center">
               <span className="text-sm text-base-content/60">{format(comment.createdAt, "yyyy年MM月dd日 HH:mm", { locale: zhCN })}</span>
               <div className="flex items-center gap-1">

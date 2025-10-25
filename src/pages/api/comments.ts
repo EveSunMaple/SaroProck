@@ -68,7 +68,7 @@ export async function GET(context: APIContext): Promise<Response> {
     query.include("parent");
     const results = await query.find();
 
-    const commentIds = results.map(c => c.id!);
+    const commentIds = results.map((c) => c.id!);
     if (commentIds.length === 0) {
       return new Response(JSON.stringify([]), { status: 200 });
     }
