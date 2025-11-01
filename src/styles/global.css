@@ -110,3 +110,7 @@ i.emoji {
   font-style: normal !important;
   vertical-align: middle;
 }
+
+.katex-display {
+    @apply overflow-x-auto;
+}
