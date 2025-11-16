@@ -15,6 +15,34 @@ interface MetricsData {
   name: string;
   count: number;
 }
+interface HistoryDataPoint {
+  date: string;
+  comments: {
+    daily: number;
+    blog: number;
+    telegram: number;
+    cumulative: number;
+    cumulativeBlog: number;
+    cumulativeTelegram: number;
+  };
+  likes: {
+    daily: number;
+    posts: number;
+    comments: number;
+    cumulative: number;
+    cumulativePosts: number;
+    cumulativeComments: number;
+  };
+}
+interface PostStats {
+  identifier: string;
+  type: "blog" | "telegram";
+  title: string;
+  comments: number;
+  likes: number;
+  commentLikes: number;
+  totalLikes: number;
+}
 
 const StatCard = ({ title, value, details, icon }: { title: string; value: string | number; details: React.ReactNode; icon: string }) => (
   <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
@@ -50,150 +78,438 @@ const MetricsTable = ({ title, data, icon }: { title: string; data: MetricsData[
 
 const Dashboard: React.FC = () => {
   const [stats, setStats] = useState<StatsData | null>(null);
+  const [statsLoading, setStatsLoading] = useState(true);
   const [views, setViews] = useState<ViewsData[] | null>(null);
+  const [viewsLoading, setViewsLoading] = useState(true);
   const [topReferers, setTopReferers] = useState<MetricsData[] | null>(null);
   const [topCountries, setTopCountries] = useState<MetricsData[] | null>(null);
   const [topOS, setTopOS] = useState<MetricsData[] | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [metricsLoading, setMetricsLoading] = useState(true);
+  const [historyData, setHistoryData] = useState<HistoryDataPoint[] | null>(null);
+  const [historyLoading, setHistoryLoading] = useState(true);
+
+  // 扁平化历史数据以便Recharts使用
+  const flattenedHistoryData = React.useMemo(() => {
+    if (!historyData)
+      return null;
+    return historyData.map((item) => ({
+      date: item.date,
+      commentsDaily: item.comments.daily,
+      commentsBlog: item.comments.blog,
+      commentsTelegram: item.comments.telegram,
+      commentsCumulative: item.comments.cumulative,
+      commentsBlogCumulative: item.comments.cumulativeBlog,
+      commentsTelegramCumulative: item.comments.cumulativeTelegram,
+      likesDaily: item.likes.daily,
+      likesPosts: item.likes.posts,
+      likesComments: item.likes.comments,
+      likesCumulative: item.likes.cumulative,
+      likesPostsCumulative: item.likes.cumulativePosts,
+      likesCommentsCumulative: item.likes.cumulativeComments,
+    }));
+  }, [historyData]);
+  const [postsStats, setPostsStats] = useState<PostStats[] | null>(null);
+  const [postsStatsLoading, setPostsStatsLoading] = useState(true);
+  const [historyDays, setHistoryDays] = useState(30);
 
   const period = "last-7d";
 
+  // 获取总览统计数据
   useEffect(() => {
-    const fetchAllData = async () => {
+    const fetchStats = async () => {
       try {
-        setLoading(true);
-
-        // 1. 获取总览数据 (不带时间参数，获取所有时间)
-        const statsPromise = fetch("/api/admin/stats").then((res) => res.ok ? res.json() : null);
-
-        // 2. 获取详细数据 (全部带上 period 参数)
-        const viewsPromise = fetch(`/api/admin/sink-details?report=views&unit=day&period=${period}`).then((res) => res.ok ? res.json() : null);
-        const referersPromise = fetch(`/api/admin/sink-details?report=metrics&type=referer&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
-        const countriesPromise = fetch(`/api/admin/sink-details?report=metrics&type=country&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
-        const osPromise = fetch(`/api/admin/sink-details?report=metrics&type=os&limit=5&period=${period}`).then((res) => res.ok ? res.json() : null);
-
-        // 并行等待所有请求完成
-        const [
-          statsData,
-          viewsData,
-          referersData,
-          countriesData,
-          osData,
-        ] = await Promise.all([
-          statsPromise,
-          viewsPromise,
-          referersPromise,
-          countriesPromise,
-          osPromise,
-        ]);
-
-        // 更新状态
-        if (statsData)
-          setStats(statsData);
-        if (viewsData)
-          setViews(viewsData.data);
-        if (referersData)
-          setTopReferers(referersData.data);
-        if (countriesData)
-          setTopCountries(countriesData.data);
-        if (osData)
-          setTopOS(osData.data);
+        setStatsLoading(true);
+        const response = await fetch("/api/admin/stats");
+        if (response.ok) {
+          const data = await response.json();
+          setStats(data);
+        }
       }
       catch (error) {
-        console.error("Failed to fetch dashboard data:", error);
+        console.error("Failed to fetch stats:", error);
       }
       finally {
-        setLoading(false);
+        setStatsLoading(false);
       }
     };
-    fetchAllData();
+    fetchStats();
+  }, []);
+
+  // 获取访问趋势数据
+  useEffect(() => {
+    const fetchViews = async () => {
+      try {
+        setViewsLoading(true);
+        const response = await fetch(`/api/admin/sink-details?report=views&unit=day&period=${period}`);
+        if (response.ok) {
+          const data = await response.json();
+          setViews(data.data);
+        }
+      }
+      catch (error) {
+        console.error("Failed to fetch views:", error);
+      }
+      finally {
+        setViewsLoading(false);
+      }
+    };
+    fetchViews();
   }, [period]);
 
-  if (loading) {
-    return <div className="text-center p-20"><span className="loading loading-dots loading-lg"></span></div>;
-  }
+  // 获取来源、国家、操作系统数据
+  useEffect(() => {
+    const fetchMetrics = async () => {
+      try {
+        setMetricsLoading(true);
+        const [referersRes, countriesRes, osRes] = await Promise.all([
+          fetch(`/api/admin/sink-details?report=metrics&type=referer&limit=5&period=${period}`),
+          fetch(`/api/admin/sink-details?report=metrics&type=country&limit=5&period=${period}`),
+          fetch(`/api/admin/sink-details?report=metrics&type=os&limit=5&period=${period}`),
+        ]);
+
+        if (referersRes.ok) {
+          const data = await referersRes.json();
+          setTopReferers(data.data);
+        }
+        if (countriesRes.ok) {
+          const data = await countriesRes.json();
+          setTopCountries(data.data);
+        }
+        if (osRes.ok) {
+          const data = await osRes.json();
+          setTopOS(data.data);
+        }
+      }
+      catch (error) {
+        console.error("Failed to fetch metrics:", error);
+      }
+      finally {
+        setMetricsLoading(false);
+      }
+    };
+    fetchMetrics();
+  }, [period]);
+
+  // 获取历史趋势数据（独立加载，支持时间范围切换）
+  useEffect(() => {
+    const fetchHistory = async () => {
+      try {
+        setHistoryLoading(true);
+        const response = await fetch(`/api/admin/stats-history?days=${historyDays}`);
+        if (response.ok) {
+          const data = await response.json();
+          setHistoryData(data.data);
+        }
+      }
+      catch (error) {
+        console.error("Failed to fetch history:", error);
+      }
+      finally {
+        setHistoryLoading(false);
+      }
+    };
+    fetchHistory();
+  }, [historyDays]);
+
+  // 获取文章统计数据
+  useEffect(() => {
+    const fetchPostsStats = async () => {
+      try {
+        setPostsStatsLoading(true);
+        const response = await fetch("/api/admin/posts-stats");
+        if (response.ok) {
+          const data = await response.json();
+          setPostsStats(data.data);
+        }
+      }
+      catch (error) {
+        console.error("Failed to fetch posts stats:", error);
+      }
+      finally {
+        setPostsStatsLoading(false);
+      }
+    };
+    fetchPostsStats();
+  }, []);
 
   return (
     <div>
       <h1 className="text-3xl font-bold mb-6">管理后台</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {stats && (
-          <>
-            <StatCard
-              title="总评论数"
-              value={stats.comments.total}
-              details={(
-                <>
-                  博客:
-                  {stats.comments.blog}
-                  {" "}
-                  | 动态:
-                  {stats.comments.telegram}
-                </>
-              )}
-              icon="ri-chat-3-line"
-            />
-            <StatCard
-              title="总点赞数"
-              value={stats.likes.total}
-              details={(
-                <>
-                  内容:
-                  {stats.likes.posts}
-                  {" "}
-                  | 评论:
-                  {stats.likes.comments}
-                </>
-              )}
-              icon="ri-heart-3-line"
-            />
-            <StatCard title="短链总访问量" value={stats.sink.totalViews} details="来自 saro.pub 的统计" icon="ri-links-line" />
-          </>
-        )}
+        {statsLoading
+          ? (
+              <>
+                <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
+                  <div className="stat-title">总评论数</div>
+                  <div className="stat-value"><span className="loading loading-spinner loading-md"></span></div>
+                </div>
+                <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
+                  <div className="stat-title">总点赞数</div>
+                  <div className="stat-value"><span className="loading loading-spinner loading-md"></span></div>
+                </div>
+                <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
+                  <div className="stat-title">短链总访问量</div>
+                  <div className="stat-value"><span className="loading loading-spinner loading-md"></span></div>
+                </div>
+              </>
+            )
+          : stats && (
+            <>
+              <StatCard
+                title="总评论数"
+                value={stats.comments.total}
+                details={(
+                  <>
+                    博客:
+                    {stats.comments.blog}
+                    {" "}
+                    | 动态:
+                    {stats.comments.telegram}
+                  </>
+                )}
+                icon="ri-chat-3-line"
+              />
+              <StatCard
+                title="总点赞数"
+                value={stats.likes.total}
+                details={(
+                  <>
+                    内容:
+                    {stats.likes.posts}
+                    {" "}
+                    | 评论:
+                    {stats.likes.comments}
+                  </>
+                )}
+                icon="ri-heart-3-line"
+              />
+              <StatCard title="短链总访问量" value={stats.sink.totalViews} details="来自 saro.pub 的统计" icon="ri-links-line" />
+            </>
+          )}
       </div>
 
-      <div className="divider my-8">最近 7 天详细统计</div>
+      <div className="divider my-8">访问趋势</div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4">访问趋势</h3>
-        {views
+        {viewsLoading
           ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={views} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-base-content)" strokeOpacity={0.5} />
-                  <XAxis
-                    dataKey="time"
-                    stroke="var(--color-base-content)"
-                    tickFormatter={(timeStr) => {
-                      const date = new Date(timeStr);
-                      return `${date.getMonth() + 1}/${date.getDate()}`;
-                    }}
-                  />
-                  <YAxis stroke="var(--color-base-content)" />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: "var(--color-base-100)",
-                      backdropFilter: "blur(4px)",
-                      border: "1px solid var(--color-base-content)",
-                      borderRadius: "0.5rem",
-                      opacity: 0.9,
-                    }}
-                  />
-                  <Legend />
-                  <Line type="monotone" dataKey="visits" name="访问量" stroke="var(--color-success)" strokeWidth={2} />
-                  <Line type="monotone" dataKey="visitors" name="访客数" stroke="var(--color-info)" strokeWidth={2} />
-                </LineChart>
-              </ResponsiveContainer>
+              <div className="flex justify-center items-center h-[300px]">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
             )
-          : <p>无法加载图表数据。</p>}
+          : views
+            ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={views} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-base-content)" strokeOpacity={0.5} />
+                    <XAxis
+                      dataKey="time"
+                      stroke="var(--color-base-content)"
+                      tickFormatter={(timeStr) => {
+                        const date = new Date(timeStr);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                    />
+                    <YAxis stroke="var(--color-base-content)" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--color-base-100)",
+                        backdropFilter: "blur(4px)",
+                        border: "1px solid var(--color-base-content)",
+                        borderRadius: "0.5rem",
+                        opacity: 0.9,
+                      }}
+                    />
+                    <Legend />
+                    <Line type="monotone" dataKey="visits" name="访问量" stroke="var(--color-success)" strokeWidth={2} />
+                    <Line type="monotone" dataKey="visitors" name="访客数" stroke="var(--color-info)" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              )
+            : <p>无法加载图表数据。</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <MetricsTable title="Top 5 来源" data={topReferers} icon="ri-global-line" />
-        <MetricsTable title="Top 5 国家" data={topCountries} icon="ri-earth-line" />
-        <MetricsTable title="Top 5 操作系统" data={topOS} icon="ri-computer-line" />
+        {metricsLoading
+          ? (
+              <>
+                <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
+                  <h3 className="font-bold mb-2">Top 5 来源</h3>
+                  <div className="flex justify-center items-center h-[200px]">
+                    <span className="loading loading-spinner"></span>
+                  </div>
+                </div>
+                <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
+                  <h3 className="font-bold mb-2">Top 5 国家</h3>
+                  <div className="flex justify-center items-center h-[200px]">
+                    <span className="loading loading-spinner"></span>
+                  </div>
+                </div>
+                <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
+                  <h3 className="font-bold mb-2">Top 5 操作系统</h3>
+                  <div className="flex justify-center items-center h-[200px]">
+                    <span className="loading loading-spinner"></span>
+                  </div>
+                </div>
+              </>
+            )
+          : (
+              <>
+                <MetricsTable title="Top 5 来源" data={topReferers} icon="ri-global-line" />
+                <MetricsTable title="Top 5 国家" data={topCountries} icon="ri-earth-line" />
+                <MetricsTable title="Top 5 操作系统" data={topOS} icon="ri-computer-line" />
+              </>
+            )}
       </div>
+
+      <div className="divider my-8">评论与点赞趋势</div>
+
+      <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-bold">评论与点赞累计趋势</h3>
+          <select
+            className="select select-sm select-bordered"
+            value={historyDays}
+            onChange={(e) => setHistoryDays(Number.parseInt(e.target.value, 10))}
+          >
+            <option value={7}>最近 7 天</option>
+            <option value={30}>最近 30 天</option>
+            <option value={90}>最近 90 天</option>
+          </select>
+        </div>
+        {historyLoading
+          ? (
+              <div className="flex justify-center items-center h-[300px]">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+            )
+          : flattenedHistoryData && flattenedHistoryData.length > 0
+            ? (
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={flattenedHistoryData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-base-content)" strokeOpacity={0.5} />
+                    <XAxis
+                      dataKey="date"
+                      stroke="var(--color-base-content)"
+                      tickFormatter={(dateStr) => {
+                        const date = new Date(dateStr);
+                        return `${date.getMonth() + 1}/${date.getDate()}`;
+                      }}
+                    />
+                    <YAxis stroke="var(--color-base-content)" />
+                    <Tooltip
+                      contentStyle={{
+                        backgroundColor: "var(--color-base-100)",
+                        backdropFilter: "blur(4px)",
+                        border: "1px solid var(--color-base-content)",
+                        borderRadius: "0.5rem",
+                        opacity: 0.9,
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="commentsCumulative"
+                      name="累计评论数"
+                      stroke="var(--color-success)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="likesCumulative"
+                      name="累计点赞数"
+                      stroke="var(--color-info)"
+                      strokeWidth={2}
+                      dot={false}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              )
+            : <p>无法加载趋势数据。</p>}
+      </div>
+
+      <div className="divider my-8">文章统计</div>
+
+      <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
+        <h3 className="font-bold mb-4 flex items-center gap-2">
+          <i className="ri-file-list-3-line"></i>
+          各文章评论与点赞统计
+        </h3>
+        {postsStatsLoading
+          ? (
+              <div className="flex justify-center items-center h-[300px]">
+                <span className="loading loading-spinner loading-lg"></span>
+              </div>
+            )
+          : postsStats && postsStats.length > 0
+            ? (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {postsStats.slice(0, 12).map((post) => {
+                      const totalInteraction = post.comments + post.totalLikes;
+                      return (
+                        <a
+                          key={`${post.type}-${post.identifier}`}
+                          href={`/${post.type === "telegram" ? "post" : "blog"}/${post.identifier}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="group bg-base-100/80 hover:bg-base-100 border border-base-content/10 hover:border-primary/30 rounded-lg p-3 transition-all duration-200 hover:shadow-md"
+                        >
+                          <div className="flex items-start justify-between mb-2">
+                            <span className={`badge badge-sm flex items-center gap-1 badge-outline ${post.type === "blog" ? "badge-primary" : "badge-secondary"}`}>
+                              <i className={post.type === "blog" ? "ri-article-line" : "ri-message-3-line"}></i>
+                              <span>{post.type === "blog" ? "博客" : "动态"}</span>
+                            </span>
+                            <span className="text-xs font-bold opacity-80">
+                              {totalInteraction}
+                            </span>
+                          </div>
+                          <h4 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                            {post.title}
+                          </h4>
+                          <div className="flex flex-wrap gap-2 text-xs">
+                            <div className="flex items-center gap-1 text-base-content/70">
+                              <i className="ri-chat-3-line text-info"></i>
+                              <span>{post.comments}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-base-content/70">
+                              <i className="ri-heart-3-line text-error"></i>
+                              <span>{post.totalLikes}</span>
+                            </div>
+                            {post.commentLikes > 0 && (
+                              <div className="flex items-center gap-1 text-base-content/70">
+                                <i className="ri-heart-add-line text-warning"></i>
+                                <span>{post.commentLikes}</span>
+                              </div>
+                            )}
+                          </div>
+                        </a>
+                      );
+                    })}
+                  </div>
+                  {postsStats.length > 12 && (
+                    <div className="text-center mt-4 text-sm opacity-60 flex items-center justify-center gap-1">
+                      <i className="ri-information-line"></i>
+                      仅显示前 12 条，共
+                      {" "}
+                      <span className="font-semibold">{postsStats.length}</span>
+                      {" "}
+                      条记录
+                    </div>
+                  )}
+                </>
+              )
+            : (
+                <div className="text-center py-8 text-base-content/50">
+                  <i className="ri-inbox-line text-4xl mb-2 block"></i>
+                  <p>暂无数据</p>
+                </div>
+              )}
+      </div>
+
       <div className="divider my-8">快捷入口</div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
