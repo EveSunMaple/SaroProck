@@ -7,11 +7,35 @@ interface Props {
 
 const LikeButton: React.FC<Props> = ({ postId }) => {
   const [likeCount, setLikeCount] = useState<number>(0);
+  const [displayCount, setDisplayCount] = useState<number>(0);
   const [hasLiked, setHasLiked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const storageKey = `liked_feed_posts`; // 使用独立的 key
+
+  // 数字平滑过渡动画
+  useEffect(() => {
+    let frame: number;
+    const duration = 200; // ms
+    const start = performance.now();
+    const from = displayCount;
+    const to = likeCount;
+
+    if (from === to)
+      return;
+
+    const animate = (time: number) => {
+      const progress = Math.min(1, (time - start) / duration);
+      const value = Math.round(from + (to - from) * progress);
+      setDisplayCount(value);
+      if (progress < 1)
+        frame = requestAnimationFrame(animate);
+    };
+
+    frame = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(frame);
+  }, [likeCount]);
 
   // 挂载时仅从本地存储恢复是否点赞，不请求后端，减少首页请求次数
   useEffect(() => {
@@ -108,7 +132,13 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
             <i className={`${hasLiked ? "ri-heart-fill" : "ri-heart-line"} text-lg`}></i>
           )}
       <span>{hasLiked ? "已赞" : "点赞"}</span>
-      {likeCount > 0 && <span className="opacity-70">· {likeCount}</span>}
+      {displayCount > 0 && (
+        <span className="opacity-70">
+          ·
+          {" "}
+          {displayCount}
+        </span>
+      )}
     </button>
   );
 };
