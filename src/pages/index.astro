@@ -9,7 +9,7 @@ import { getChannelFeed } from "@/lib/telegram";
 const { searchParams } = Astro.url;
 const before = searchParams.get("before");
 const after = searchParams.get("after");
-const q = searchParams.get("q"); // 同时考虑搜索的情况
+const q = searchParams.get("q");
 
 const { posts } = await getChannelFeed(Astro, {
   before: before || undefined,
@@ -30,23 +30,35 @@ const showAfter = showPagination && (!!before || !!after);
 // 是否显示 "更早" 按钮？(理论上总是显示，除非没有更多数据，这里我们先默认显示)
 const showBefore = showPagination;
 
-let infoMessage = "";
+let infoBlock = null;
 if (q) {
-  infoMessage = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
+  infoBlock = (
+    <>
+      正在查看关于 <strong class="text-primary">“{q}”</strong> 的搜索结果。
+    </>
+  );
 } else if (before) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
+  infoBlock = (
+    <>
+      正在查看 ID <strong class="text-primary">{before}</strong> 之前的动态。
+    </>
+  );
 } else if (after) {
-  infoMessage = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
+  infoBlock = (
+    <>
+      正在查看 ID <strong class="text-primary">{after}</strong> 之后的动态。
+    </>
+  );
 }
 ---
 
 <Layout title="首页">
   <TelegramLayout>
     {
-      infoMessage && (
+      infoBlock && (
         <div role="alert" class="alert rounded-xl text-sm">
           <i class="ri-information-line" />
-          <span set:html={infoMessage} />
+          <span>{infoBlock}</span>
           <a href="/" class="btn btn-ghost btn-sm ml-auto">
             <i class="ri-arrow-go-back-line mr-1" />
             返回最新
