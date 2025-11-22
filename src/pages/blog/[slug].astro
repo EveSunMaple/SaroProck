@@ -5,6 +5,7 @@ import PostFooter from "@components/blog/PostFooter.astro";
 import ShareButtons from "@components/blog/ShareButtons.astro";
 import Comments from "@components/comments/Comments.astro";
 import BlogLikeButton from "@/components/blog/LikeButton";
+import ViewTracker from "@/components/blog/ViewTracker";
 import dayjs from "@/lib/telegram/dayjs-setup";
 import { getAllPostsWithShortLinks } from "@/lib/blog";
 
@@ -67,6 +68,7 @@ const customComponents = {
   headings={headings}
 >
   <article class="max-w-4xl mx-auto">
+    <ViewTracker client:only="react" slug={post.slug} />
     <header class="mb-12 animate-fade-in">
       {
         image && (

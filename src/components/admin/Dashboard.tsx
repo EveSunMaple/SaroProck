@@ -15,24 +15,9 @@ interface MetricsData {
   name: string;
   count: number;
 }
-interface HistoryDataPoint {
+interface DailyViewsPoint {
   date: string;
-  comments: {
-    daily: number;
-    blog: number;
-    telegram: number;
-    cumulative: number;
-    cumulativeBlog: number;
-    cumulativeTelegram: number;
-  };
-  likes: {
-    daily: number;
-    posts: number;
-    comments: number;
-    cumulative: number;
-    cumulativePosts: number;
-    cumulativeComments: number;
-  };
+  views: number;
 }
 interface PostStats {
   identifier: string;
@@ -85,32 +70,11 @@ const Dashboard: React.FC = () => {
   const [topCountries, setTopCountries] = useState<MetricsData[] | null>(null);
   const [topOS, setTopOS] = useState<MetricsData[] | null>(null);
   const [metricsLoading, setMetricsLoading] = useState(true);
-  const [historyData, setHistoryData] = useState<HistoryDataPoint[] | null>(null);
-  const [historyLoading, setHistoryLoading] = useState(true);
-
-  // 扁平化历史数据以便Recharts使用
-  const flattenedHistoryData = React.useMemo(() => {
-    if (!historyData)
-      return null;
-    return historyData.map((item) => ({
-      date: item.date,
-      commentsDaily: item.comments.daily,
-      commentsBlog: item.comments.blog,
-      commentsTelegram: item.comments.telegram,
-      commentsCumulative: item.comments.cumulative,
-      commentsBlogCumulative: item.comments.cumulativeBlog,
-      commentsTelegramCumulative: item.comments.cumulativeTelegram,
-      likesDaily: item.likes.daily,
-      likesPosts: item.likes.posts,
-      likesComments: item.likes.comments,
-      likesCumulative: item.likes.cumulative,
-      likesPostsCumulative: item.likes.cumulativePosts,
-      likesCommentsCumulative: item.likes.cumulativeComments,
-    }));
-  }, [historyData]);
+  const [dailyViews, setDailyViews] = useState<DailyViewsPoint[] | null>(null);
+  const [dailyViewsLoading, setDailyViewsLoading] = useState(true);
   const [postsStats, setPostsStats] = useState<PostStats[] | null>(null);
   const [postsStatsLoading, setPostsStatsLoading] = useState(true);
-  const [historyDays, setHistoryDays] = useState(30);
+  const [dailyViewsDays, setDailyViewsDays] = useState(30);
 
   const period = "last-7d";
 
@@ -190,26 +154,26 @@ const Dashboard: React.FC = () => {
     fetchMetrics();
   }, [period]);
 
-  // 获取历史趋势数据（独立加载，支持时间范围切换）
+  // 获取每日浏览量数据（支持时间范围切换）
   useEffect(() => {
-    const fetchHistory = async () => {
+    const fetchDailyViews = async () => {
       try {
-        setHistoryLoading(true);
-        const response = await fetch(`/api/admin/stats-history?days=${historyDays}`);
+        setDailyViewsLoading(true);
+        const response = await fetch(`/api/admin/daily-views?days=${dailyViewsDays}`);
         if (response.ok) {
           const data = await response.json();
-          setHistoryData(data.data);
+          setDailyViews(data.data);
         }
       }
       catch (error) {
-        console.error("Failed to fetch history:", error);
+        console.error("Failed to fetch daily views:", error);
       }
       finally {
-        setHistoryLoading(false);
+        setDailyViewsLoading(false);
       }
     };
-    fetchHistory();
-  }, [historyDays]);
+    fetchDailyViews();
+  }, [dailyViewsDays]);
 
   // 获取文章统计数据
   useEffect(() => {
@@ -364,31 +328,31 @@ const Dashboard: React.FC = () => {
             )}
       </div>
 
-      <div className="divider my-8">评论与点赞趋势</div>
+      <div className="divider my-8">每日浏览量</div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold">评论与点赞累计趋势</h3>
+          <h3 className="font-bold">每日博客浏览量</h3>
           <select
             className="select select-sm select-bordered"
-            value={historyDays}
-            onChange={(e) => setHistoryDays(Number.parseInt(e.target.value, 10))}
+            value={dailyViewsDays}
+            onChange={(e) => setDailyViewsDays(Number.parseInt(e.target.value, 10))}
           >
             <option value={7}>最近 7 天</option>
             <option value={30}>最近 30 天</option>
             <option value={90}>最近 90 天</option>
           </select>
         </div>
-        {historyLoading
+        {dailyViewsLoading
           ? (
               <div className="flex justify-center items-center h-[300px]">
                 <span className="loading loading-spinner loading-lg"></span>
               </div>
             )
-          : flattenedHistoryData && flattenedHistoryData.length > 0
+          : dailyViews && dailyViews.length > 0
             ? (
                 <ResponsiveContainer width="100%" height={300}>
-                  <LineChart data={flattenedHistoryData} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
+                  <LineChart data={dailyViews} margin={{ top: 5, right: 20, left: -10, bottom: 5 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="var(--color-base-content)" strokeOpacity={0.5} />
                     <XAxis
                       dataKey="date"
@@ -411,24 +375,16 @@ const Dashboard: React.FC = () => {
                     <Legend />
                     <Line
                       type="monotone"
-                      dataKey="commentsCumulative"
-                      name="累计评论数"
-                      stroke="var(--color-success)"
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="likesCumulative"
-                      name="累计点赞数"
-                      stroke="var(--color-info)"
+                      dataKey="views"
+                      name="浏览量"
+                      stroke="var(--color-primary)"
                       strokeWidth={2}
                       dot={false}
                     />
                   </LineChart>
                 </ResponsiveContainer>
               )
-            : <p>无法加载趋势数据。</p>}
+            : <p>无法加载每日浏览量数据。</p>}
       </div>
 
       <div className="divider my-8">文章统计</div>

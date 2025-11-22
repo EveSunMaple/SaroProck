@@ -1,9 +1,9 @@
 // src/pages/api/admin/posts-stats.ts
 import type { APIContext } from "astro";
+import { getCollection } from "astro:content";
 import AV from "leancloud-storage";
 import { getAdminUser } from "@/lib/auth";
 import { initLeanCloud } from "@/lib/leancloud.server";
-import { getCollection } from "astro:content";
 
 // 初始化 LeanCloud
 initLeanCloud();
@@ -157,4 +157,3 @@ export async function GET(context: APIContext): Promise<Response> {
     return new Response(JSON.stringify({ error: "Failed to fetch posts statistics" }), { status: 500 });
   }
 }
-

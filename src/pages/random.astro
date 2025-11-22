@@ -2,55 +2,11 @@
 // src/pages/random.astro
 import { getCollection } from "astro:content";
 
-// 1. 获取所有已发布的博客文章
 const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
+if (allPosts.length === 0) return Astro.redirect("/");
 
-// 2. 处理没有文章的边缘情况
-// 如果博客里一篇文章都没有，就重定向到首页
-if (allPosts.length === 0) {
-  return Astro.redirect("/");
-}
+const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
+const redirectUrl = encodeURI(`/blog/${randomPost.slug}`);
 
-// 3. 生成一个随机索引
-// Math.random() 生成 0 到 1 之间的随机数
-// 乘以文章总数，再用 Math.floor() 取整，得到 0 到 (总数-1) 之间的随机整数
-const randomIndex = Math.floor(Math.random() * allPosts.length);
-
-// 4. 根据随机索引，从文章数组中选中一篇幸运文章
-const randomPost = allPosts[randomIndex];
-
-// 5. 构建这篇幸运文章的 URL
-const redirectUrl = `/blog/${randomPost.slug}`;
-
-// 6. 执行服务端重定向
-// 这会在浏览器接收到任何 HTML 之前就完成跳转，速度极快
 return Astro.redirect(redirectUrl, 307);
-// 使用 307 (临时重定向) 而不是 301 (永久重定向)，
-// 因为每次访问这个页面的结果都应该是不同的，不应被浏览器或搜索引擎缓存。
 ---
-
-<html lang="zh-CN">
-  <head>
-    <meta charset="UTF-8" />
-    <title>正在带你进行一次时光漂流...</title>
-    <meta http-equiv="refresh" content={`0;url=${redirectUrl}`} />
-    <style>
-      body {
-        font-family: sans-serif;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        height: 100vh;
-        background-color: #f0f2f5;
-        color: #333;
-      }
-    </style>
-  </head>
-  <body>
-    <p>
-      正在带你进行一次时光漂流... <a href={redirectUrl}
-        >如果页面没有自动跳转，请点击这里</a
-      >。
-    </p>
-  </body>
-</html>

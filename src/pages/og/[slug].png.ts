@@ -168,6 +168,7 @@ export async function GET({ props }: APIContext<{ post: CollectionEntry<"blog"> 
     ],
   });
 
+  // eslint-disable-next-line node/prefer-global/buffer
   const png = await sharp(Buffer.from(svg)).png().toBuffer();
   return new Response(png, {
     headers: {

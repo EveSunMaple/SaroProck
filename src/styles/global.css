@@ -112,5 +112,5 @@ i.emoji {
 }
 
 .katex-display {
-    @apply overflow-x-auto;
+  @apply overflow-x-auto;
 }
