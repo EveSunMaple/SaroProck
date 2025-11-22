@@ -36,7 +36,7 @@ export async function GET(context: APIContext): Promise<Response> {
     telegramCommentsQuery.select("createdAt", "postId");
     telegramCommentsQuery.limit(10000);
 
-    // 获取所有点赞记录
+    // 获取所有点赞记录（评论点赞 + 文章点赞日志）
     const blogCommentLikesQuery = new AV.Query("CommentLike");
     blogCommentLikesQuery.select("createdAt");
     blogCommentLikesQuery.limit(10000);
@@ -45,30 +45,17 @@ export async function GET(context: APIContext): Promise<Response> {
     telegramCommentLikesQuery.select("createdAt");
     telegramCommentLikesQuery.limit(10000);
 
-    const postLikeLogQuery = new AV.Query("PostLikeLog");
-    postLikeLogQuery.select("createdAt");
-    postLikeLogQuery.limit(10000);
-
-    // 获取 PostLikes 表的总数（用于验证数据一致性）
-    const postLikesQuery = new AV.Query("PostLikes");
-    postLikesQuery.select("likes");
-    postLikesQuery.limit(1000);
-
     // 并行获取所有历史数据
     const [
       blogComments,
       telegramComments,
       blogCommentLikes,
       telegramCommentLikes,
-      postLikeLogs,
-      allPostLikes,
     ] = await Promise.all([
       blogCommentsQuery.find(),
       telegramCommentsQuery.find(),
       blogCommentLikesQuery.find(),
       telegramCommentLikesQuery.find(),
-      postLikeLogQuery.find(),
-      postLikesQuery.find(),
     ]);
 
     // 按日期分组统计每日新增（所有历史数据）
@@ -113,53 +100,11 @@ export async function GET(context: APIContext): Promise<Response> {
       likesByDate.set(dateKey, stats);
     });
 
-    // 统计所有历史文章点赞
-    postLikeLogs.forEach((log) => {
-      const createdAt = new Date(log.get("createdAt"));
-      const dateKey = createdAt.toISOString().split("T")[0];
-      const stats = likesByDate.get(dateKey) || { posts: 0, comments: 0, total: 0 };
-      stats.posts++;
-      stats.total++;
-      likesByDate.set(dateKey, stats);
-    });
-
     // 获取所有日期并排序（从最早到最晚）
     const allDates = new Set<string>();
     commentsByDate.forEach((_, date) => allDates.add(date));
     likesByDate.forEach((_, date) => allDates.add(date));
     const sortedAllDates = Array.from(allDates).sort();
-
-    // 计算 PostLikes 表的总数（用于验证数据一致性）
-    const totalPostLikesFromStats = allPostLikes.reduce((sum, item) => sum + (item.get("likes") || 0), 0);
-    const totalPostLikesFromLogs = postLikeLogs.length;
-
-    // 如果 PostLikeLog 的记录数少于 PostLikes 的总数，说明有历史数据缺失
-    // 将差值加到最早有点赞记录的日期
-    const likesDifference = totalPostLikesFromStats - totalPostLikesFromLogs;
-    if (likesDifference > 0) {
-      // 找到最早有点赞记录的日期
-      const likesDates = Array.from(likesByDate.keys()).filter((date) => {
-        const stats = likesByDate.get(date);
-        return stats && (stats.posts > 0 || stats.comments > 0);
-      }).sort();
-
-      if (likesDates.length > 0) {
-        // 将差值加到最早有点赞记录的日期
-        const earliestLikesDate = likesDates[0];
-        const earliestStats = likesByDate.get(earliestLikesDate) || { posts: 0, comments: 0, total: 0 };
-        earliestStats.posts += likesDifference;
-        earliestStats.total += likesDifference;
-        likesByDate.set(earliestLikesDate, earliestStats);
-      }
-      else if (sortedAllDates.length > 0) {
-        // 如果没有点赞记录，加到最早有记录的日期
-        const earliestDate = sortedAllDates[0];
-        const earliestStats = likesByDate.get(earliestDate) || { posts: 0, comments: 0, total: 0 };
-        earliestStats.posts += likesDifference;
-        earliestStats.total += likesDifference;
-        likesByDate.set(earliestDate, earliestStats);
-      }
-    }
 
     // 计算从最早日期到每个日期的真实累计数（包括各分类的累计）
     let cumulativeComments = 0;

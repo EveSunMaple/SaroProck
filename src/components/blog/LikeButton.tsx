@@ -2,19 +2,6 @@ import confetti from "canvas-confetti";
 // src/components/blog/LikeButton.tsx
 import React, { useEffect, useRef, useState } from "react";
 
-// 获取或生成唯一的设备ID
-const getDeviceId = (): string => {
-  if (typeof window === "undefined")
-    return "ssr-user";
-  const key = "comment_device_id"; // 复用评论的设备ID
-  let deviceId = localStorage.getItem(key);
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem(key, deviceId);
-  }
-  return deviceId;
-};
-
 interface Props {
   postId: string;
 }
@@ -31,25 +18,25 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
 
   useEffect(() => {
     let isMounted = true;
-    const deviceId = getDeviceId();
-
     const fetchInitialState = async () => {
       try {
-        const response = await fetch(`/api/like?postId=${postId}&deviceId=${deviceId}`);
+        const response = await fetch(`/api/like?postId=${postId}`);
         if (!response.ok)
           throw new Error("Failed to fetch");
         const data = await response.json();
         if (isMounted) {
           setLikeCount(data.likeCount);
-          setHasLiked(data.hasLiked);
+          // 是否点赞改为前端根据 localStorage 决定，这里只关心总数
+          const likedPosts = JSON.parse(localStorage.getItem(storageKey) || "[]");
+          if (Array.isArray(likedPosts) && likedPosts.includes(postId))
+            setHasLiked(true);
         }
       }
       catch (error) {
         console.error(`Failed to fetch likes for post ${postId}:`, error);
         const likedPosts = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        if (isMounted && likedPosts.includes(postId)) {
+        if (isMounted && Array.isArray(likedPosts) && likedPosts.includes(postId))
           setHasLiked(true);
-        }
       }
       finally {
         if (isMounted)
@@ -70,8 +57,6 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
 
     setIsSubmitting(true);
     const newLikedState = !hasLiked;
-    const deviceId = getDeviceId();
-
     setHasLiked(newLikedState);
     setLikeCount((prev) => newLikedState ? prev + 1 : Math.max(0, prev - 1));
 
@@ -96,15 +81,13 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
       const response = await fetch("/api/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, deviceId }),
+        body: JSON.stringify({ postId, delta: newLikedState ? 1 : -1 }),
       });
       if (!response.ok)
         throw new Error("API request failed");
       const data = await response.json();
-      if (data.success) {
+      if (data.success)
         setLikeCount(data.likeCount);
-        setHasLiked(data.hasLiked);
-      }
     }
     catch (error) {
       console.error("Failed to submit like:", error);

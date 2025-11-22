@@ -1,19 +1,6 @@
 // src/components/feed/LikeButton.tsx
 import React, { useEffect, useState } from "react";
 
-// 获取或生成唯一的设备ID
-const getDeviceId = (): string => {
-  if (typeof window === "undefined")
-    return "ssr-user";
-  const key = "comment_device_id"; // 复用评论的设备ID
-  let deviceId = localStorage.getItem(key);
-  if (!deviceId) {
-    deviceId = crypto.randomUUID();
-    localStorage.setItem(key, deviceId);
-  }
-  return deviceId;
-};
-
 interface Props {
   postId: string;
 }
@@ -61,7 +48,6 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
 
     setIsSubmitting(true);
     const newLikedState = !hasLiked;
-    const deviceId = getDeviceId();
 
     // 1. 乐观更新 UI
     setHasLiked(newLikedState);
@@ -79,7 +65,7 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
       const response = await fetch("/api/like", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ postId, deviceId }),
+        body: JSON.stringify({ postId, delta: newLikedState ? 1 : -1 }),
       });
 
       if (!response.ok)
@@ -87,10 +73,8 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
 
       // 可选：使用后端返回的权威数据进行最终确认
       const data = await response.json();
-      if (data.success) {
+      if (data.success)
         setLikeCount(data.likeCount);
-        setHasLiked(data.hasLiked);
-      }
     }
     catch (error) {
       console.error("Failed to submit like:", error);
