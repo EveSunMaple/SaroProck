@@ -2,7 +2,7 @@
 import type { TelegramPost } from "@/types";
 import MediaGallery from "./MediaGallery.astro";
 import LinkPreview from "./LinkPreview.astro";
-import Comments from "@components/comments/Comments.astro";
+import InlineComments from "@components/comments/InlineComments";
 import LikeButton from "./LikeButton.tsx";
 
 interface Props {
@@ -105,10 +105,10 @@ const { post, isLastItem = false } = Astro.props;
       </div>
 
       <div class="border-t border-base-content/5 px-4 pt-2 pb-4">
-        <Comments
+        <InlineComments
+          client:only="react"
           identifier={post.id}
           commentType="telegram"
-          displayMode="compact"
         />
       </div>
     </div>

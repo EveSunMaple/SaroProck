@@ -26,37 +26,29 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
 
   const storageKey = `liked_feed_posts`; // 使用独立的 key
 
-  // 挂载时从后端获取初始状态
+  // 挂载时仅从本地存储恢复是否点赞，不请求后端，减少首页请求次数
   useEffect(() => {
     let isMounted = true;
-    const deviceId = getDeviceId();
+    if (typeof window === "undefined") {
+      setIsLoading(false);
+      return () => {
+        isMounted = false;
+      };
+    }
 
-    const fetchInitialState = async () => {
-      try {
-        const response = await fetch(`/api/like?postId=${postId}&deviceId=${deviceId}`);
-        if (!response.ok)
-          throw new Error("Failed to fetch");
-        const data = await response.json();
-        if (isMounted) {
-          setLikeCount(data.likeCount);
-          setHasLiked(data.hasLiked);
-        }
+    try {
+      const likedPosts = JSON.parse(localStorage.getItem(storageKey) || "[]");
+      if (isMounted && Array.isArray(likedPosts) && likedPosts.includes(postId)) {
+        setHasLiked(true);
       }
-      catch (error) {
-        console.error(`Failed to fetch likes for post ${postId}:`, error);
-        // 如果API失败，可以尝试从本地存储恢复
-        const likedPosts = JSON.parse(localStorage.getItem(storageKey) || "[]");
-        if (isMounted && likedPosts.includes(postId)) {
-          setHasLiked(true);
-        }
-      }
-      finally {
-        if (isMounted)
-          setIsLoading(false);
-      }
-    };
-
-    fetchInitialState();
+    }
+    catch (error) {
+      console.error("Failed to restore like state from localStorage", error);
+    }
+    finally {
+      if (isMounted)
+        setIsLoading(false);
+    }
 
     return () => {
       isMounted = false;
@@ -131,7 +123,8 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
         : (
             <i className={`${hasLiked ? "ri-heart-fill" : "ri-heart-line"} text-lg`}></i>
           )}
-      {likeCount > 0 && <span>{likeCount}</span>}
+      <span>{hasLiked ? "已赞" : "点赞"}</span>
+      {likeCount > 0 && <span className="opacity-70">· {likeCount}</span>}
     </button>
   );
 };
