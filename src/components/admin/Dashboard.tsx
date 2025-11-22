@@ -27,6 +27,7 @@ interface PostStats {
   likes: number;
   commentLikes: number;
   totalLikes: number;
+  views: number;
 }
 
 const StatCard = ({ title, value, details, icon }: { title: string; value: string | number; details: React.ReactNode; icon: string }) => (
@@ -75,6 +76,8 @@ const Dashboard: React.FC = () => {
   const [postsStats, setPostsStats] = useState<PostStats[] | null>(null);
   const [postsStatsLoading, setPostsStatsLoading] = useState(true);
   const [dailyViewsDays, setDailyViewsDays] = useState(30);
+  const [postsFilter, setPostsFilter] = useState<"all" | "blog" | "telegram">("all");
+  const [showAllPosts, setShowAllPosts] = useState(false);
 
   const period = "last-7d";
 
@@ -253,10 +256,16 @@ const Dashboard: React.FC = () => {
           )}
       </div>
 
-      <div className="divider my-8">访问趋势</div>
+      <div className="divider my-8 flex items-center gap-2">
+        <i className="ri-bar-chart-2-line text-lg"></i>
+        访问趋势
+      </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
-        <h3 className="font-bold mb-4">访问趋势</h3>
+        <h3 className="font-bold mb-4 flex items-center gap-2">
+          <i className="ri-pulse-line"></i>
+          访问趋势
+        </h3>
         {viewsLoading
           ? (
               <div className="flex justify-center items-center h-[300px]">
@@ -328,11 +337,17 @@ const Dashboard: React.FC = () => {
             )}
       </div>
 
-      <div className="divider my-8">每日浏览量</div>
+      <div className="divider my-8 flex items-center gap-2">
+        <i className="ri-bar-chart-line text-lg"></i>
+        每日浏览量
+      </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
-          <h3 className="font-bold">每日博客浏览量</h3>
+          <h3 className="font-bold flex items-center gap-2">
+            <i className="ri-line-chart-line"></i>
+            每日博客浏览量
+          </h3>
           <select
             className="select select-sm select-bordered"
             value={dailyViewsDays}
@@ -387,13 +402,54 @@ const Dashboard: React.FC = () => {
             : <p>无法加载每日浏览量数据。</p>}
       </div>
 
-      <div className="divider my-8">文章统计</div>
+      <div className="divider my-8 flex items-center gap-2">
+        <i className="ri-file-chart-line text-lg"></i>
+        内容统计
+      </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4 flex items-center gap-2">
           <i className="ri-file-list-3-line"></i>
-          各文章评论与点赞统计
+          各内容互动与浏览统计
         </h3>
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-sm">
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              className={`btn btn-xs ${postsFilter === "all" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setPostsFilter("all")}
+            >
+              <i className="ri-apps-2-line mr-1"></i>
+              全部
+            </button>
+            <button
+              type="button"
+              className={`btn btn-xs ${postsFilter === "blog" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setPostsFilter("blog")}
+            >
+              <i className="ri-article-line mr-1"></i>
+              博客
+            </button>
+            <button
+              type="button"
+              className={`btn btn-xs ${postsFilter === "telegram" ? "btn-primary" : "btn-ghost"}`}
+              onClick={() => setPostsFilter("telegram")}
+            >
+              <i className="ri-message-3-line mr-1"></i>
+              动态
+            </button>
+          </div>
+          {postsStats && postsStats.length > 12 && (
+            <button
+              type="button"
+              className="btn btn-ghost btn-xs flex items-center gap-1"
+              onClick={() => setShowAllPosts((v) => !v)}
+            >
+              <i className={showAllPosts ? "ri-eye-off-line" : "ri-eye-line"}></i>
+              {showAllPosts ? "只看前 12 条" : "显示全部"}
+            </button>
+          )}
+        </div>
         {postsStatsLoading
           ? (
               <div className="flex justify-center items-center h-[300px]">
@@ -403,59 +459,77 @@ const Dashboard: React.FC = () => {
           : postsStats && postsStats.length > 0
             ? (
                 <>
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {postsStats.slice(0, 12).map((post) => {
-                      const totalInteraction = post.comments + post.totalLikes;
-                      return (
-                        <a
-                          key={`${post.type}-${post.identifier}`}
-                          href={`/${post.type === "telegram" ? "post" : "blog"}/${post.identifier}`}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="group bg-base-100/80 hover:bg-base-100 border border-base-content/10 hover:border-primary/30 rounded-lg p-3 transition-all duration-200 hover:shadow-md"
-                        >
-                          <div className="flex items-start justify-between mb-2">
-                            <span className={`badge badge-sm flex items-center gap-1 badge-outline ${post.type === "blog" ? "badge-primary" : "badge-secondary"}`}>
-                              <i className={post.type === "blog" ? "ri-article-line" : "ri-message-3-line"}></i>
-                              <span>{post.type === "blog" ? "博客" : "动态"}</span>
-                            </span>
-                            <span className="text-xs font-bold opacity-80">
-                              {totalInteraction}
-                            </span>
+                  {(() => {
+                    const filtered = postsStats.filter((post) =>
+                      postsFilter === "all" ? true : post.type === postsFilter,
+                    );
+                    const visible = showAllPosts ? filtered : filtered.slice(0, 12);
+                    const totalCount = filtered.length;
+                    return (
+                      <>
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                          {visible.map((post) => {
+                            const totalInteraction = post.comments + post.totalLikes;
+                            return (
+                              <a
+                                key={`${post.type}-${post.identifier}`}
+                                href={`/${post.type === "telegram" ? "post" : "blog"}/${post.identifier}`}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="group bg-base-100/80 hover:bg-base-100 border border-base-content/10 hover:border-primary/30 rounded-lg p-3 transition-all duration-200 hover:shadow-md"
+                              >
+                                <div className="flex items-start justify-between mb-2">
+                                  <span className={`badge badge-sm flex items-center gap-1 badge-outline ${post.type === "blog" ? "badge-primary" : "badge-secondary"}`}>
+                                    <i className={post.type === "blog" ? "ri-article-line" : "ri-message-3-line"}></i>
+                                    <span>{post.type === "blog" ? "博客" : "动态"}</span>
+                                  </span>
+                                  <span className="text-xs font-bold opacity-80 flex items-center gap-1">
+                                    <i className="ri-fire-line text-warning"></i>
+                                    {totalInteraction}
+                                  </span>
+                                </div>
+                                <h4 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
+                                  {post.title}
+                                </h4>
+                                <div className="flex flex-wrap gap-3 text-xs">
+                                  {post.type === "blog" && (
+                                    <div className="flex items-center gap-1 text-base-content/70">
+                                      <i className="ri-eye-line text-primary"></i>
+                                      <span>{post.views}</span>
+                                    </div>
+                                  )}
+                                  <div className="flex items-center gap-1 text-base-content/70">
+                                    <i className="ri-chat-3-line text-info"></i>
+                                    <span>{post.comments}</span>
+                                  </div>
+                                  <div className="flex items-center gap-1 text-base-content/70">
+                                    <i className="ri-heart-3-line text-error"></i>
+                                    <span>{post.totalLikes}</span>
+                                  </div>
+                                  {post.commentLikes > 0 && (
+                                    <div className="flex items-center gap-1 text-base-content/70">
+                                      <i className="ri-heart-add-line text-warning"></i>
+                                      <span>{post.commentLikes}</span>
+                                    </div>
+                                  )}
+                                </div>
+                              </a>
+                            );
+                          })}
+                        </div>
+                        {totalCount > 12 && !showAllPosts && (
+                          <div className="text-center mt-4 text-sm opacity-60 flex items-center justify-center gap-1">
+                            <i className="ri-information-line"></i>
+                            仅显示前 12 条，共
+                            {" "}
+                            <span className="font-semibold">{totalCount}</span>
+                            {" "}
+                            条记录
                           </div>
-                          <h4 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
-                            {post.title}
-                          </h4>
-                          <div className="flex flex-wrap gap-2 text-xs">
-                            <div className="flex items-center gap-1 text-base-content/70">
-                              <i className="ri-chat-3-line text-info"></i>
-                              <span>{post.comments}</span>
-                            </div>
-                            <div className="flex items-center gap-1 text-base-content/70">
-                              <i className="ri-heart-3-line text-error"></i>
-                              <span>{post.totalLikes}</span>
-                            </div>
-                            {post.commentLikes > 0 && (
-                              <div className="flex items-center gap-1 text-base-content/70">
-                                <i className="ri-heart-add-line text-warning"></i>
-                                <span>{post.commentLikes}</span>
-                              </div>
-                            )}
-                          </div>
-                        </a>
-                      );
-                    })}
-                  </div>
-                  {postsStats.length > 12 && (
-                    <div className="text-center mt-4 text-sm opacity-60 flex items-center justify-center gap-1">
-                      <i className="ri-information-line"></i>
-                      仅显示前 12 条，共
-                      {" "}
-                      <span className="font-semibold">{postsStats.length}</span>
-                      {" "}
-                      条记录
-                    </div>
-                  )}
+                        )}
+                      </>
+                    );
+                  })()}
                 </>
               )
             : (
@@ -466,7 +540,10 @@ const Dashboard: React.FC = () => {
               )}
       </div>
 
-      <div className="divider my-8">快捷入口</div>
+      <div className="divider my-8 flex items-center gap-2">
+        <i className="ri-rocket-2-line text-lg"></i>
+        快捷入口
+      </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <a href="/admin/comments" className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">

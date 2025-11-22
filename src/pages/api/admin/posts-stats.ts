@@ -38,6 +38,11 @@ export async function GET(context: APIContext): Promise<Response> {
     postLikesQuery.limit(1000);
     const postLikes = await postLikesQuery.find();
 
+    // 获取所有文章浏览量
+    const postViewsQuery = new AV.Query("PostViews");
+    postViewsQuery.limit(10000);
+    const postViews = await postViewsQuery.find();
+
     // 获取所有评论点赞
     const blogCommentLikesQuery = new AV.Query("CommentLike");
     blogCommentLikesQuery.limit(10000);
@@ -72,6 +77,16 @@ export async function GET(context: APIContext): Promise<Response> {
       const likes = like.get("likes") || 0;
       if (postId) {
         postLikeCounts.set(postId, likes);
+      }
+    });
+
+    // 统计每篇文章的浏览量
+    const postViewCounts = new Map<string, number>();
+    postViews.forEach((item) => {
+      const postId = item.get("slug") as string | undefined;
+      const views = (item.get("views") as number) || 0;
+      if (postId) {
+        postViewCounts.set(postId, views);
       }
     });
 
@@ -123,6 +138,7 @@ export async function GET(context: APIContext): Promise<Response> {
         likes: postLikeCounts.get(slug) || 0,
         commentLikes: commentLikeCountsByPost.get(slug) || 0,
         totalLikes: (postLikeCounts.get(slug) || 0) + (commentLikeCountsByPost.get(slug) || 0),
+        views: postViewCounts.get(slug) || 0,
       };
     });
 
@@ -138,6 +154,7 @@ export async function GET(context: APIContext): Promise<Response> {
       likes: postLikeCounts.get(postId) || 0,
       commentLikes: commentLikeCountsByPost.get(postId) || 0,
       totalLikes: (postLikeCounts.get(postId) || 0) + (commentLikeCountsByPost.get(postId) || 0),
+      views: postViewCounts.get(postId) || 0,
     }));
 
     // 合并并排序（按总互动数排序：评论数 + 点赞数）
