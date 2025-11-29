@@ -25,11 +25,11 @@ export async function getAllPostsWithShortLinks(
 
   const allPosts = await getCollection(
     "blog",
-    ({ data }) => data.draft !== true,
+    ({ data }: CollectionEntry<"blog">) => data.draft !== true,
   );
 
   const postsWithLinks = await Promise.all(
-    allPosts.map(async (post) => {
+    allPosts.map(async (post: CollectionEntry<"blog">) => {
       const longUrl = new URL(`/blog/${post.slug}`, siteUrl).toString();
       const shortLink = await getShortLink({
         longUrl,

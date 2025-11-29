@@ -1,8 +1,11 @@
 ---
 // src/pages/random.astro
-import { getCollection } from "astro:content";
+import { type CollectionEntry, getCollection } from "astro:content";
 
-const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
+const allPosts = await getCollection(
+  "blog",
+  ({ data }: CollectionEntry<"blog">) => data.draft !== true,
+);
 if (allPosts.length === 0) return Astro.redirect("/");
 
 return Astro.redirect(

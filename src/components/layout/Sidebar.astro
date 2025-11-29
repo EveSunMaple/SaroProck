@@ -1,5 +1,5 @@
 ---
-import { getCollection } from "astro:content";
+import { type CollectionEntry, getCollection } from "astro:content";
 import TOC from "@components/blog/TOC.astro";
 import type { MarkdownHeading } from "astro";
 
@@ -14,7 +14,10 @@ export interface Props {
 const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
 
 // 动态统计数据 (无改动)
-const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
+const allPosts = await getCollection(
+  "blog",
+  ({ data }: CollectionEntry<"blog">) => data.draft !== true,
+);
 const countWords = (text: string) => {
   text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
   text = text.replace(/[`*~_#+\-![\]{}()>|]/g, "");
@@ -24,7 +27,7 @@ const countWords = (text: string) => {
   return cjkChars + otherWords;
 };
 const totalWords = allPosts.reduce(
-  (acc, post) => acc + countWords(post.body),
+  (acc: number, post: CollectionEntry<"blog">) => acc + countWords(post.body),
   0,
 );
 const formattedTotalWords =

@@ -1,12 +1,15 @@
-import { getCollection } from "astro:content";
+import { type CollectionEntry, getCollection } from "astro:content";
 import type { APIRoute } from "astro";
 
 export const GET: APIRoute = async () => {
   try {
     // 获取所有非草稿文章
-    const blogEntries = await getCollection("blog", ({ data }) => {
-      return !data.draft;
-    });
+    const blogEntries = await getCollection(
+      "blog",
+      ({ data }: CollectionEntry<"blog">) => {
+        return !data.draft;
+      },
+    );
 
     // 从所有文章中提取唯一的标签和分类
     const tags = new Set<string>();

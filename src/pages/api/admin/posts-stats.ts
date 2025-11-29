@@ -1,6 +1,6 @@
 // src/pages/api/admin/posts-stats.ts
 
-import { getCollection } from "astro:content";
+import { type CollectionEntry, getCollection } from "astro:content";
 import type { APIContext } from "astro";
 import AV from "leancloud-storage";
 import { getAdminUser } from "@/lib/auth";
@@ -24,8 +24,13 @@ export async function GET(context: APIContext): Promise<Response> {
 
   try {
     // 获取所有博客文章
-    const blogEntries = await getCollection("blog", ({ data }) => !data.draft);
-    const blogSlugs = blogEntries.map((entry) => entry.slug);
+    const blogEntries = await getCollection(
+      "blog",
+      ({ data }: CollectionEntry<"blog">) => !data.draft,
+    );
+    const blogSlugs = blogEntries.map(
+      (entry: CollectionEntry<"blog">) => entry.slug,
+    );
 
     // 获取所有评论
     const blogCommentsQuery = new AV.Query("Comment");
@@ -140,8 +145,10 @@ export async function GET(context: APIContext): Promise<Response> {
     });
 
     // 构建博客文章统计
-    const blogStats = blogSlugs.map((slug) => {
-      const entry = blogEntries.find((e) => e.slug === slug);
+    const blogStats = blogSlugs.map((slug: string) => {
+      const entry = blogEntries.find(
+        (e: CollectionEntry<"blog">) => e.slug === slug,
+      );
       return {
         identifier: slug,
         type: "blog" as const,

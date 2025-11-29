@@ -8,7 +8,7 @@ export const prerender = true;
 
 export const getStaticPaths: GetStaticPaths = async () => {
   const posts = await getCollection("blog");
-  return posts.map((post) => ({
+  return posts.map((post: CollectionEntry<"blog">) => ({
     params: { slug: post.slug },
     props: { post }, // 将整篇 post 数据传递给 GET 函数
   }));
@@ -107,7 +107,7 @@ export async function GET({
           props: {
             style: { display: "flex", gap: "12px", flexWrap: "wrap" },
             children: [
-              ...(post.data.categories || []).map((cat) => ({
+              ...(post.data.categories || []).map((cat: string) => ({
                 type: "div",
                 props: {
                   style: {
@@ -119,7 +119,7 @@ export async function GET({
                   children: cat,
                 },
               })),
-              ...(post.data.tags || []).map((tag) => ({
+              ...(post.data.tags || []).map((tag: string) => ({
                 type: "div",
                 props: {
                   style: {
