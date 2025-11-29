@@ -30,23 +30,28 @@ const showAfter = showPagination && (!!before || !!after);
 // 是否显示 "更早" 按钮？(理论上总是显示，除非没有更多数据，这里我们先默认显示)
 const showBefore = showPagination;
 
-let infoBlock = "";
-if (q) {
-  infoBlock = `正在查看关于 <strong class="text-primary">“${q}”</strong> 的搜索结果。`;
-} else if (before) {
-  infoBlock = `正在查看 ID <strong class="text-primary">${before}</strong> 之前的动态。`;
-} else if (after) {
-  infoBlock = `正在查看 ID <strong class="text-primary">${after}</strong> 之后的动态。`;
-}
+const hasInfoBlock = !!q || !!before || !!after;
 ---
 
 <Layout title="首页">
   <TelegramLayout>
     {
-      infoBlock && (
+      hasInfoBlock && (
         <div role="alert" class="alert rounded-xl text-sm">
           <i class="ri-information-line" />
-          <span>{infoBlock}</span>
+          <span>
+            {q && (
+              <>
+                正在查看关于 <strong class="text-primary">{q}</strong> 的搜索结果。
+              </>
+            )}
+            {!q && before && (
+              <>正在查看 ID <strong class="text-primary">{before}</strong> 之前的动态。</>
+            )}
+            {!q && !before && after && (
+              <>正在查看 ID <strong class="text-primary">{after}</strong> 之后的动态。</>
+            )}
+          </span>
           <a href="/" class="btn btn-ghost btn-sm ml-auto">
             <i class="ri-arrow-go-back-line mr-1" />
             返回最新

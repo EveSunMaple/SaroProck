@@ -97,6 +97,46 @@ import { Icon } from "astro-icon/components";
 </div>
 
 <script>
+  interface SearchIndexEntry {
+    title: string;
+    url: string;
+    description: string;
+    tags: string[];
+    categories: string[];
+    contentText: string;
+  }
+
+  interface ClientSearchResult {
+    title: string;
+    url: string;
+    snippet: string;
+    tags: string[];
+    categories: string[];
+    matchScore: number;
+    matchDetails: {
+      title: boolean;
+      categories: boolean;
+      tags: boolean;
+      content: boolean;
+    };
+    keywords: string[];
+  }
+
+  let searchIndexCache: SearchIndexEntry[] | null = null;
+
+  async function loadSearchIndex(): Promise<SearchIndexEntry[]> {
+    if (searchIndexCache) return searchIndexCache;
+
+    const response = await fetch("/search-index.json");
+    if (!response.ok) {
+      throw new Error("Failed to load search index");
+    }
+
+    const data = (await response.json()) as SearchIndexEntry[];
+    searchIndexCache = data;
+    return data;
+  }
+
   // 当组件加载后执行
   document.addEventListener("DOMContentLoaded", setupSearch);
 
@@ -201,6 +241,18 @@ import { Icon } from "astro-icon/components";
         // 执行搜索
         performSearch(query, selectedTags, selectedCategories);
       }, 300);
+    });
+
+    // 回车时跳转到首页动态搜索
+    searchInput.addEventListener("keydown", (e: KeyboardEvent) => {
+      if (e.key === "Enter") {
+        console.log("Enter pressed");
+        const query = searchInput.value.trim();
+        if (query.length > 0) {
+          e.preventDefault();
+          window.location.href = `/?q=${encodeURIComponent(query)}`;
+        }
+      }
     });
 
     // 焦点时显示下拉框（如果有查询）
@@ -376,9 +428,10 @@ import { Icon } from "astro-icon/components";
     `;
 
     try {
-      // 分割查询关键词（在 UI 层也进行分割，与 API 保持一致）
+      // 分割查询关键词（在 UI 层进行分割）
       const keywords = query
         .trim()
+        .toLowerCase()
         .split(/\s+/)
         .filter((keyword) => keyword.length >= 2);
 
@@ -392,22 +445,77 @@ import { Icon } from "astro-icon/components";
         return;
       }
 
-      // 调用搜索 API
-      const response = await fetch("/api/search", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          query, // 保持发送完整查询字符串
-          tags: tags.length > 0 ? tags : undefined,
-          categories: categories.length > 0 ? categories : undefined,
-        }),
+      const index = await loadSearchIndex();
+
+      const filtered = index.filter((entry) => {
+        const entryTags = entry.tags || [];
+        const entryCategories = entry.categories || [];
+        if (tags.length && !tags.some((tag) => entryTags.includes(tag))) return false;
+        if (categories.length && !categories.some((cat) => entryCategories.includes(cat))) return false;
+        return true;
       });
 
-      if (!response.ok) throw new Error("Search request failed");
+      const results: ClientSearchResult[] = [];
 
-      const results = await response.json();
+      for (const entry of filtered) {
+        const titleLower = entry.title.toLowerCase();
+        const tagsLower = (entry.tags || []).map((t) => t.toLowerCase());
+        const categoriesLower = (entry.categories || []).map((c) => c.toLowerCase());
+        const contentText = entry.contentText;
+        const contentTextLower = contentText.toLowerCase();
+
+        let matchScore = 0;
+        const matchDetails = {
+          title: false,
+          categories: false,
+          tags: false,
+          content: false,
+        };
+
+        for (const keyword of keywords) {
+          if (titleLower.includes(keyword)) {
+            matchScore += 100;
+            matchDetails.title = true;
+          }
+          if (tagsLower.some((t) => t.includes(keyword))) {
+            matchScore += 30;
+            matchDetails.tags = true;
+          }
+          if (categoriesLower.some((c) => c.includes(keyword))) {
+            matchScore += 50;
+            matchDetails.categories = true;
+          }
+          if (contentTextLower.includes(keyword)) {
+            matchScore += 10;
+            matchDetails.content = true;
+          }
+        }
+
+        if (matchScore === 0) continue;
+
+        let snippet = entry.description || "";
+        if (matchDetails.content) {
+          const matchedKeyword = keywords.find((k) => contentTextLower.includes(k)) || "";
+          const contentMatchIndex = matchedKeyword
+            ? contentTextLower.indexOf(matchedKeyword)
+            : -1;
+          if (contentMatchIndex !== -1) {
+            const startIndex = Math.max(0, contentMatchIndex - 50);
+            snippet = `${(startIndex > 0 ? "..." : "") + contentText.substring(startIndex, startIndex + 100)}...`;
+          }
+        }
+
+        results.push({
+          title: entry.title,
+          url: entry.url,
+          snippet,
+          tags: entry.tags || [],
+          categories: entry.categories || [],
+          matchScore,
+          matchDetails,
+          keywords,
+        });
+      }
 
       if (results.length === 0) {
         searchResults.innerHTML = `
@@ -419,10 +527,13 @@ import { Icon } from "astro-icon/components";
         return;
       }
 
-      // 显示搜索结果
+      results.sort(
+        (a, b) => b.matchScore - a.matchScore || a.title.localeCompare(b.title),
+      );
+
       const resultsHtml = results
         .map(
-          (result: any) => `
+          (result) => `
         <a href="${result.url}" class="search-result block p-3 mb-3 hover:bg-base-200 rounded-lg transition-colors duration-300 border-l-4 border-transparent hover:border-primary group">
           <h3 class="font-semibold text-lg group-hover:text-primary transition-colors">${highlightMatch(result.title, result.keywords)}</h3>
           ${
@@ -439,7 +550,12 @@ import { Icon } from "astro-icon/components";
                   `<span class="badge badge-neutral ${result.matchDetails.categories ? "badge-primary" : ""}">${highlightMatch(category, result.keywords)}</span>`,
               )
               .join("")}
-            ${result.tags.map((tag: string) => `<span class="badge badge-outline ${result.matchDetails.tags ? "text-primary border-primary" : ""}">${highlightMatch(tag, result.keywords)}</span>`).join("")}
+            ${result.tags
+              .map(
+                (tag: string) =>
+                  `<span class="badge badge-outline ${result.matchDetails.tags ? "text-primary border-primary" : ""}">${highlightMatch(tag, result.keywords)}</span>`,
+              )
+              .join("")}
           </div>
         </a>
       `,
@@ -533,7 +649,7 @@ import { Icon } from "astro-icon/components";
   /* 为搜索结果容器定义滚动条样式 */
   .search-results-container {
     scrollbar-width: thin;
-    scrollbar-color: var(--b3) transparent;
+    scrollbar-color: var(--color-base-300) transparent;
   }
 
   .search-results-container::-webkit-scrollbar {
@@ -545,7 +661,7 @@ import { Icon } from "astro-icon/components";
   }
 
   .search-results-container::-webkit-scrollbar-thumb {
-    background-color: var(--b3);
+    background-color: var(--color-base-300);
     border-radius: 10px;
   }
 

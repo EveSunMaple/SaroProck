@@ -25,6 +25,18 @@ interface SearchResult {
   };
 }
 
+interface IndexedPost {
+  title: string;
+  url: string;
+  description: string;
+  tags: string[];
+  categories: string[];
+  contentText: string;
+  contentTextLower: string;
+}
+
+let cachedIndex: IndexedPost[] | null = null;
+
 export const POST: APIRoute = async ({ request, site }) => {
   try {
     const body = await request.json() as SearchQuery;
@@ -42,25 +54,46 @@ export const POST: APIRoute = async ({ request, site }) => {
     if (!site) {
       throw new Error("A `site` property is required in your astro.config.mjs for this API route to work.");
     }
-    const allPosts = await getAllPostsWithShortLinks(site);
 
-    const processor = remark().use(strip);
+    if (!cachedIndex) {
+      const allPosts = await getAllPostsWithShortLinks(site);
+      const processor = remark().use(strip);
+
+      const builtIndex = await Promise.all(
+        allPosts.map(async (post) => {
+          const { title, description = "", tags = [], categories = [] } = post.data;
+          const { value: content } = await processor.process(post.body);
+          const contentText = String(content);
+          const contentTextLower = contentText.toLowerCase();
+
+          return {
+            title,
+            url: post.shortLink || post.longUrl,
+            description,
+            tags,
+            categories,
+            contentText,
+            contentTextLower,
+          } as IndexedPost;
+        }),
+      );
+
+      cachedIndex = builtIndex;
+    }
 
     const searchResults = await Promise.all(
-      allPosts
+      cachedIndex
         .filter((entry) => {
-          const entryTags = entry.data.tags || [];
-          const entryCategories = entry.data.categories || [];
+          const entryTags = entry.tags || [];
+          const entryCategories = entry.categories || [];
           if (tags?.length && !tags.some((tag) => entryTags.includes(tag)))
             return false;
           if (categories?.length && !categories.some((cat) => entryCategories.includes(cat)))
             return false;
           return true;
         })
-        .map(async (post) => {
-          const { title, description, tags = [], categories = [] } = post.data;
-          const { value: content } = await processor.process(post.body);
-          const contentText = String(content);
+        .map(async (entry) => {
+          const { title, description, tags = [], categories = [], contentText, contentTextLower } = entry;
 
           let matchScore = 0;
           const matchDetails = { title: false, categories: false, tags: false, content: false };
@@ -69,7 +102,7 @@ export const POST: APIRoute = async ({ request, site }) => {
             if (title.toLowerCase().includes(keyword)) { matchScore += 100; matchDetails.title = true; }
             if (tags.some((t) => t.toLowerCase().includes(keyword))) { matchScore += 30; matchDetails.tags = true; }
             if (categories.some((c) => c.toLowerCase().includes(keyword))) { matchScore += 50; matchDetails.categories = true; }
-            if (contentText.toLowerCase().includes(keyword)) { matchScore += 10; matchDetails.content = true; }
+            if (contentTextLower.includes(keyword)) { matchScore += 10; matchDetails.content = true; }
           }
 
           if (matchScore === 0)
@@ -77,7 +110,8 @@ export const POST: APIRoute = async ({ request, site }) => {
 
           let snippet = description || "";
           if (matchDetails.content) {
-            const contentMatchIndex = contentText.toLowerCase().indexOf(keywords.find((k) => contentText.toLowerCase().includes(k)) || "");
+            const matchedKeyword = keywords.find((k) => contentTextLower.includes(k)) || "";
+            const contentMatchIndex = matchedKeyword ? contentTextLower.indexOf(matchedKeyword) : -1;
             if (contentMatchIndex !== -1) {
               const startIndex = Math.max(0, contentMatchIndex - 50);
               snippet = `${(startIndex > 0 ? "..." : "") + contentText.substring(startIndex, startIndex + 100)}...`;
@@ -86,7 +120,7 @@ export const POST: APIRoute = async ({ request, site }) => {
 
           return {
             title,
-            url: post.shortLink || post.longUrl,
+            url: entry.url,
             snippet,
             tags,
             categories,

@@ -69,6 +69,11 @@ code {
   text-align: right;
 }
 
+.highlight,
+.search-mark {
+  @apply text-accent bg-accent-content/50 rounded-md p-1 mx-0.5;
+}
+
 .btn-copy {
   cursor: pointer;
   position: relative;
