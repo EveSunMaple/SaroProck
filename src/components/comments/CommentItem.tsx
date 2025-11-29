@@ -1,26 +1,28 @@
-import type { CommentData } from "./CommentsWrapper";
 import { format, formatDistanceToNow } from "date-fns";
 import { zhCN } from "date-fns/locale";
 import hljs from "highlight.js";
-import React, { useEffect, useRef, useState } from "react";
+import type React from "react";
+import { useEffect, useRef, useState } from "react";
 import { SENSITIVE_USERS } from "@/config";
 import CommentForm from "./CommentForm";
+import type { CommentData } from "./CommentsWrapper";
 import "highlight.js/styles/github.css"; // 亮色模式
 import "highlight.js/styles/github-dark.css"; // 暗色模式
 
 // 头像代理函数
 function proxyAvatar(url: string | undefined): string {
-  if (!url)
-    return "/avatar-placeholder.png";
+  if (!url) return "/avatar-placeholder.png";
   try {
     const urlObj = new URL(url);
-    if (urlObj.hostname === "www.gravatar.com" || urlObj.hostname === "gravatar.com") {
+    if (
+      urlObj.hostname === "www.gravatar.com" ||
+      urlObj.hostname === "gravatar.com"
+    ) {
       urlObj.hostname = "cravatar.cn";
       return urlObj.toString();
     }
     return url;
-  }
-  catch {
+  } catch {
     return url;
   }
 }
@@ -33,16 +35,22 @@ interface Props {
 }
 
 // 重命名为 CommentItemComponent 以便在文件内部递归调用
-const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded, displayMode }) => {
+const CommentItemComponent: React.FC<Props> = ({
+  comment,
+  onLike,
+  onCommentAdded,
+  displayMode,
+}) => {
   const [showReplyForm, setShowReplyForm] = useState(false);
 
   const SENSITIVE_USERS_LOWER = SENSITIVE_USERS.map((u) => u.toLowerCase());
   const userNicknameLower = (comment.nickname || "").toLowerCase();
   const userEmailLower = (comment.email || "").toLowerCase();
 
-  const isImpersonator = !comment.isAdmin
-    && (SENSITIVE_USERS_LOWER.includes(userNicknameLower)
-      || SENSITIVE_USERS_LOWER.includes(userEmailLower));
+  const isImpersonator =
+    !comment.isAdmin &&
+    (SENSITIVE_USERS_LOWER.includes(userNicknameLower) ||
+      SENSITIVE_USERS_LOWER.includes(userEmailLower));
 
   const contentRef = useRef<HTMLDivElement | null>(null);
 
@@ -52,7 +60,8 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
         hljs.highlightElement(block as HTMLElement);
       });
     }
-  }, [comment.content]);
+  }, []);
+
   // --- 留言板卡片模式 ---
   if (displayMode === "guestbook") {
     const hasReplies = comment.children && comment.children.length > 0;
@@ -61,37 +70,67 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
       <div className="guestbook-card flex flex-col h-full rounded-2xl shadow-sm border border-base-content/10 bg-base-100/60 transition-all duration-300 hover:shadow-lg backdrop-blur-sm">
         <header className="flex items-start justify-between p-4">
           <div className="flex items-center gap-3 min-w-0">
-            <a href={comment.website || "#"} target="_blank" rel="noopener noreferrer" className="avatar w-10 h-10 shrink-0">
-              <div className="rounded-full ring-2 ring-base-content/5"><img src={proxyAvatar(comment.avatar)} alt={comment.nickname} /></div>
+            <a
+              href={comment.website || "#"}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="avatar w-10 h-10 shrink-0"
+            >
+              <div className="rounded-full ring-2 ring-base-content/5">
+                <img src={proxyAvatar(comment.avatar)} alt={comment.nickname} />
+              </div>
             </a>
             <div className="min-w-0">
               <p className="font-semibold truncate">{comment.nickname}</p>
-              {comment.isAdmin
-                ? (
-                    <span className="badge badge-primary badge-sm ml-2">博主</span>
-                  )
-                : isImpersonator
-                  ? (
-                      <span className="badge badge-warning badge-sm ml-2">伪装者</span>
-                    )
-                  : null}
+              {comment.isAdmin ? (
+                <span className="badge badge-primary badge-sm ml-2">博主</span>
+              ) : isImpersonator ? (
+                <span className="badge badge-warning badge-sm ml-2">
+                  伪装者
+                </span>
+              ) : null}
             </div>
           </div>
-          <time className="text-sm text-base-content/60 shrink-0 ml-2 pt-1" title={format(comment.createdAt, "yyyy年MM月dd日 HH:mm")}>
-            {formatDistanceToNow(comment.createdAt, { addSuffix: true, locale: zhCN })}
+          <time
+            className="text-sm text-base-content/60 shrink-0 ml-2 pt-1"
+            title={format(comment.createdAt, "yyyy年MM月dd日 HH:mm")}
+          >
+            {formatDistanceToNow(comment.createdAt, {
+              addSuffix: true,
+              locale: zhCN,
+            })}
           </time>
         </header>
 
-        <main className="prose prose-sm max-w-none px-4 pb-4 flex-grow break-all" dangerouslySetInnerHTML={{ __html: comment.content }}></main>
+        <main
+          className="prose prose-sm max-w-none px-4 pb-4 flex-grow break-all"
+          dangerouslySetInnerHTML={{ __html: comment.content }}
+        />
 
         <footer className="flex items-end justify-end p-4 pt-0 mt-auto">
           <div className="flex items-center">
-            <button className="btn btn-ghost btn-sm rounded-lg gap-1" onClick={() => setShowReplyForm(!showReplyForm)}>
-              <i className="ri-chat-1-line"></i>
-              <span>{showReplyForm ? "收起" : (hasReplies ? comment.children.length : "回复")}</span>
+            <button
+              type="button"
+              className="btn btn-ghost btn-sm rounded-lg gap-1"
+              onClick={() => setShowReplyForm(!showReplyForm)}
+            >
+              <i className="ri-chat-1-line" />
+              <span>
+                {showReplyForm
+                  ? "收起"
+                  : hasReplies
+                    ? comment.children.length
+                    : "回复"}
+              </span>
             </button>
-            <button className={`btn btn-ghost btn-sm rounded-lg gap-1 ${comment.isLiked ? "text-error" : ""}`} onClick={() => onLike(comment.id)}>
-              <i className={comment.isLiked ? "ri-heart-fill" : "ri-heart-line"}></i>
+            <button
+              type="button"
+              className={`btn btn-ghost btn-sm rounded-lg gap-1 ${comment.isLiked ? "text-error" : ""}`}
+              onClick={() => onLike(comment.id)}
+            >
+              <i
+                className={comment.isLiked ? "ri-heart-fill" : "ri-heart-line"}
+              />
               <span>{comment.likes > 0 ? comment.likes : ""}</span>
             </button>
           </div>
@@ -136,16 +175,32 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
   // --- 紧凑模式 (用于卡片内的回复) ---
   if (displayMode === "compact") {
     return (
-      <div className="comment-thread-compact relative" style={{ paddingLeft: `${comment.level > 0 ? 1.45 : 0}rem` }}>
+      <div
+        className="comment-thread-compact relative"
+        style={{ paddingLeft: `${comment.level > 0 ? 1.45 : 0}rem` }}
+      >
         <div className="flex gap-2 items-start relative">
-          {comment.level > 0 && <div className="absolute -left-3 top-1 w-4 h-4 border-l-2 border-b-2 border-base-content/10 rounded-bl-lg"></div>}
+          {comment.level > 0 && (
+            <div className="absolute -left-3 top-1 w-4 h-4 border-l-2 border-b-2 border-base-content/10 rounded-bl-lg" />
+          )}
           <div className="avatar w-6 h-6 shrink-0 mt-1">
-            <div className="rounded-full"><img src={proxyAvatar(comment.avatar)} alt={comment.nickname} className="w-full h-full object-cover" /></div>
+            <div className="rounded-full">
+              <img
+                src={proxyAvatar(comment.avatar)}
+                alt={comment.nickname}
+                className="w-full h-full object-cover"
+              />
+            </div>
           </div>
           <div className="flex-1 min-w-0 bg-base-100/50 px-2 py-1 rounded-lg">
             <p className="text-sm">
               <span className="font-semibold mr-1.5">{comment.nickname}</span>
-              <span className="text-base-content/80 break-all" dangerouslySetInnerHTML={{ __html: comment.content.replace(/<p>(.*?)<\/p>/g, "$1") }}></span>
+              <span
+                className="text-base-content/80 break-all"
+                dangerouslySetInnerHTML={{
+                  __html: comment.content.replace(/<p>(.*?)<\/p>/g, "$1"),
+                }}
+              />
             </p>
           </div>
         </div>
@@ -155,41 +210,74 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
 
   // --- 默认(full)模式 (保持不变) ---
   return (
-    <div className="comment-thread relative" style={{ paddingLeft: `${comment.level > 0 ? 2 : 0}rem` }}>
+    <div
+      className="comment-thread relative"
+      style={{ paddingLeft: `${comment.level > 0 ? 2 : 0}rem` }}
+    >
       <div className="comment relative" data-comment-id={comment.id}>
-        {comment.level > 0 && <div className="absolute -left-4 top-2 w-4 h-4 border-l-2 border-b-2 border-base-content/10 rounded-bl-lg"></div>}
+        {comment.level > 0 && (
+          <div className="absolute -left-4 top-2 w-4 h-4 border-l-2 border-b-2 border-base-content/10 rounded-bl-lg" />
+        )}
         <div className="flex gap-4">
           <div className="avatar flex-shrink-0">
-            <div className="w-10 h-10 rounded-full"><img src={proxyAvatar(comment.avatar)} alt={comment.nickname} /></div>
+            <div className="w-10 h-10 rounded-full">
+              <img src={proxyAvatar(comment.avatar)} alt={comment.nickname} />
+            </div>
           </div>
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2 mb-1">
-              {comment.website ? <a href={comment.website} className="font-semibold text-primary hover:underline truncate" target="_blank" rel="noopener noreferrer">{comment.nickname}</a> : <span className="font-semibold truncate">{comment.nickname}</span>}
-              {comment.isAdmin
-                ? (
-                    <div className="badge badge-primary badge-sm ml-2">博主</div>
-                  )
-                : isImpersonator
-                  ? (
-                      <div className="badge badge-warning badge-sm ml-2">伪装者</div>
-                    )
-                  : null}
+              {comment.website ? (
+                <a
+                  href={comment.website}
+                  className="font-semibold text-primary hover:underline truncate"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  {comment.nickname}
+                </a>
+              ) : (
+                <span className="font-semibold truncate">
+                  {comment.nickname}
+                </span>
+              )}
+              {comment.isAdmin ? (
+                <div className="badge badge-primary badge-sm ml-2">博主</div>
+              ) : isImpersonator ? (
+                <div className="badge badge-warning badge-sm ml-2">伪装者</div>
+              ) : null}
             </div>
             <div
               ref={contentRef}
               className="prose prose-sm mb-3 break-all overflow-x-auto"
               dangerouslySetInnerHTML={{ __html: comment.content }}
-            >
-            </div>
+            />
             <div className="flex justify-between items-center">
-              <span className="text-sm text-base-content/60">{format(comment.createdAt, "yyyy年MM月dd日 HH:mm", { locale: zhCN })}</span>
+              <span className="text-sm text-base-content/60">
+                {format(comment.createdAt, "yyyy年MM月dd日 HH:mm", {
+                  locale: zhCN,
+                })}
+              </span>
               <div className="flex items-center gap-1">
-                <button className="btn btn-ghost btn-sm rounded-lg gap-1" onClick={() => setShowReplyForm(!showReplyForm)}>
-                  <i className="ri-reply-line"></i>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm rounded-lg gap-1"
+                  onClick={() => setShowReplyForm(!showReplyForm)}
+                >
+                  <i className="ri-reply-line" />
                   <span>{showReplyForm ? "取消回复" : "回复"}</span>
                 </button>
-                <button className={`btn btn-ghost btn-sm rounded-lg gap-1 ${comment.isLiked ? "text-error" : ""}`} onClick={() => onLike(comment.id)}>
-                  <i className={comment.isLiked ? "ri-heart-fill" : "ri-heart-line"}></i>
+                <button
+                  type="button"
+                  className={`btn btn-ghost btn-sm rounded-lg gap-1 ${
+                    comment.isLiked ? "text-error" : ""
+                  }`}
+                  onClick={() => onLike(comment.id)}
+                >
+                  <i
+                    className={
+                      comment.isLiked ? "ri-heart-fill" : "ri-heart-line"
+                    }
+                  />
                   <span>{comment.likes > 0 ? comment.likes : ""}</span>
                 </button>
               </div>
@@ -199,7 +287,15 @@ const CommentItemComponent: React.FC<Props> = ({ comment, onLike, onCommentAdded
       </div>
       {showReplyForm && (
         <div className="mt-4 pl-14">
-          <CommentForm identifier={comment.identifier} commentType={comment.commentType} parentId={comment.id} onCommentAdded={onCommentAdded} displayMode="full" isReply={true} onCancelReply={() => setShowReplyForm(false)} />
+          <CommentForm
+            identifier={comment.identifier}
+            commentType={comment.commentType}
+            parentId={comment.id}
+            onCommentAdded={onCommentAdded}
+            displayMode="full"
+            isReply={true}
+            onCancelReply={() => setShowReplyForm(false)}
+          />
         </div>
       )}
     </div>

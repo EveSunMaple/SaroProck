@@ -1,13 +1,13 @@
 ---
+import Dashboard from "@/components/admin/Dashboard.tsx";
 import BaseLayout from "@/layouts/Layout.astro";
 import { getAdminUser } from "@/lib/auth";
-import Dashboard from "@/components/admin/Dashboard.tsx";
 
 // 服务端权限验证
 const adminUser = getAdminUser(Astro);
 if (!adminUser) {
-    // 非管理员重定向到登录页
-    return Astro.redirect(`/login?redirect=${Astro.url.pathname}`);
+  // 非管理员重定向到登录页
+  return Astro.redirect(`/login?redirect=${Astro.url.pathname}`);
 }
 ---
 

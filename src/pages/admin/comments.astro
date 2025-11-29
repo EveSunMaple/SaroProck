@@ -1,7 +1,7 @@
 ---
+import CommentsManager from "@/components/admin/CommentsManager.tsx";
 import BaseLayout from "@/layouts/Layout.astro";
 import { getAdminUser } from "@/lib/auth";
-import CommentsManager from "@/components/admin/CommentsManager.tsx";
 
 // 在服务端进行权限验证
 const adminUser = getAdminUser(Astro);

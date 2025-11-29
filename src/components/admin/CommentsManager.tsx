@@ -1,6 +1,7 @@
 import { format } from "date-fns";
 import { zhCN } from "date-fns/locale";
-import React, { useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import toast, { Toaster } from "react-hot-toast";
 
 interface AdminComment {
@@ -25,21 +26,33 @@ const CommentsManager: React.FC = () => {
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const [commentType, setCommentType] = useState<"blog" | "telegram">("blog");
-  const [pendingDeletion, setPendingDeletion] = useState<{ id: string; type: "blog" | "telegram" } | null>(null);
+  const [pendingDeletion, setPendingDeletion] = useState<{
+    id: string;
+    type: "blog" | "telegram";
+  } | null>(null);
 
   const fetchAllComments = useCallback(async () => {
     setLoading(true);
     try {
-      const response = await fetch(`/api/comments?commentType=${commentType}&page=${page}&limit=20`);
-      if (!response.ok)
+      const response = await fetch(
+        `/api/comments?commentType=${commentType}&page=${page}&limit=20`,
+      );
+
+      if (!response.ok) {
         throw new Error("无法获取评论数据");
+      }
+
       const result: ApiResponse = await response.json();
       setData(result);
-    }
-    catch (err: any) {
-      toast.error(err.message || "加载失败");
-    }
-    finally {
+    } catch (err: unknown) {
+      const message =
+        err instanceof Error
+          ? err.message
+          : typeof err === "string"
+            ? err
+            : "加载失败";
+      toast.error(message);
+    } finally {
       setLoading(false);
     }
   }, [page, commentType]);
@@ -58,18 +71,21 @@ const CommentsManager: React.FC = () => {
         body: JSON.stringify({ commentId: id, commentType: type }),
       });
       const result = await response.json();
-      if (!result.success)
-        throw new Error(result.message);
+      if (!result.success) throw new Error(result.message);
       toast.success("删除成功！", { id: deleting });
       setPendingDeletion(null); // 删除成功后清空待确认状态
 
       // 如果删除的是当前页的最后一个元素，且不是第一页，则返回上一页
-      if (data?.comments.length === 1 && page > 1)
-        setPage(page - 1);
+      if (data?.comments.length === 1 && page > 1) setPage(page - 1);
       else fetchAllComments();
-    }
-    catch (error: any) {
-      toast.error(`删除失败：${error.message}`, { id: deleting });
+    } catch (error: unknown) {
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "string"
+            ? error
+            : "未知错误";
+      toast.error(`删除失败：${message}`, { id: deleting });
       setPendingDeletion(null); // 删除失败也清空待确认状态
     }
   };
@@ -83,35 +99,31 @@ const CommentsManager: React.FC = () => {
 
   return (
     <div className="bg-base-200/60 backdrop-blur-xl rounded-2xl p-6 border border-base-content/10 shadow-lg">
-      <Toaster position="top-center" style="system" />
+      <Toaster position="top-center" />
       <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-        <i className="ri-chat-3-line text-xl" />
-        {" "}
-        评论管理
+        <i className="ri-chat-3-line text-xl" /> 评论管理
       </h2>
 
       <div className="tabs tabs-boxed mb-6">
         <button
+          type="button"
           className={`tab ${commentType === "blog" ? "tab-active" : ""}`}
           onClick={() => handleTabClick("blog")}
         >
-          <i className="ri-article-line mr-1" />
-          {" "}
-          博客评论
+          <i className="ri-article-line mr-1" /> 博客评论
         </button>
         <button
+          type="button"
           className={`tab ${commentType === "telegram" ? "tab-active" : ""}`}
           onClick={() => handleTabClick("telegram")}
         >
-          <i className="ri-bubble-chart-line mr-1" />
-          {" "}
-          动态评论
+          <i className="ri-bubble-chart-line mr-1" /> 动态评论
         </button>
       </div>
 
       {loading && (
         <div className="flex justify-center items-center py-20">
-          <span className="loading loading-spinner"></span>
+          <span className="loading loading-spinner" />
         </div>
       )}
 
@@ -133,7 +145,9 @@ const CommentsManager: React.FC = () => {
                   <tr key={comment.objectId} className="hover">
                     <td>
                       <div className="font-semibold">{comment.nickname}</div>
-                      <div className="text-xs opacity-60 truncate max-w-[140px]">{comment.email}</div>
+                      <div className="text-xs opacity-60 truncate max-w-[140px]">
+                        {comment.email}
+                      </div>
                     </td>
 
                     <td>
@@ -155,42 +169,51 @@ const CommentsManager: React.FC = () => {
                     </td>
 
                     <td className="whitespace-nowrap">
-                      {format(new Date(comment.createdAt), "yy-MM-dd HH:mm", { locale: zhCN })}
+                      {format(new Date(comment.createdAt), "yy-MM-dd HH:mm", {
+                        locale: zhCN,
+                      })}
                     </td>
 
                     <td className="text-center w-[120px]">
-                      {pendingDeletion?.id === comment.objectId
-                        ? (
-                            <div className="flex flex-col gap-1 items-center bg-error/10 p-2 rounded-lg">
-                              <span className="text-xs text-error font-semibold mb-1">确认删除?</span>
-                              <button
-                                className="btn btn-error btn-xs w-full"
-                                onClick={() => handleDelete(comment.objectId, comment.commentType)}
-                              >
-                                <i className="ri-check-line" />
-                                {" "}
-                                确认
-                              </button>
-                              <button
-                                className="btn btn-outline btn-xs w-full"
-                                onClick={() => setPendingDeletion(null)}
-                              >
-                                <i className="ri-close-line" />
-                                {" "}
-                                取消
-                              </button>
-                            </div>
-                          )
-                        : (
-                            <button
-                              className="btn btn-error btn-xs"
-                              onClick={() => setPendingDeletion({ id: comment.objectId, type: comment.commentType })}
-                            >
-                              <i className="ri-delete-bin-line" />
-                              {" "}
-                              删除
-                            </button>
-                          )}
+                      {pendingDeletion?.id === comment.objectId ? (
+                        <div className="flex flex-col gap-1 items-center bg-error/10 p-2 rounded-lg">
+                          <span className="text-xs text-error font-semibold mb-1">
+                            确认删除?
+                          </span>
+                          <button
+                            type="button"
+                            className="btn btn-error btn-xs w-full"
+                            onClick={() =>
+                              handleDelete(
+                                comment.objectId,
+                                comment.commentType,
+                              )
+                            }
+                          >
+                            <i className="ri-check-line" /> 确认
+                          </button>
+                          <button
+                            type="button"
+                            className="btn btn-outline btn-xs w-full"
+                            onClick={() => setPendingDeletion(null)}
+                          >
+                            <i className="ri-close-line" /> 取消
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          className="btn btn-error btn-xs"
+                          onClick={() =>
+                            setPendingDeletion({
+                              id: comment.objectId,
+                              type: comment.commentType,
+                            })
+                          }
+                        >
+                          <i className="ri-delete-bin-line" /> 删除
+                        </button>
+                      )}
                     </td>
                   </tr>
                 ))}
@@ -200,33 +223,23 @@ const CommentsManager: React.FC = () => {
 
           <div className="mt-6 flex justify-center gap-2 items-center">
             <button
+              type="button"
               className="btn btn-sm"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
             >
-              <i className="ri-arrow-left-s-line" />
-              {" "}
-              上一页
+              <i className="ri-arrow-left-s-line" /> 上一页
             </button>
             <span className="text-sm opacity-70">
-              第
-              {" "}
-              {page}
-              {" "}
-              /
-              {" "}
-              {totalPages || 1}
-              {" "}
-              页
+              第 {page} / {totalPages || 1} 页
             </span>
             <button
+              type="button"
               className="btn btn-sm"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
             >
-              下一页
-              {" "}
-              <i className="ri-arrow-right-s-line" />
+              下一页 <i className="ri-arrow-right-s-line" />
             </button>
           </div>
         </>
@@ -238,7 +251,6 @@ const CommentsManager: React.FC = () => {
           <p>暂无评论</p>
         </div>
       )}
-
     </div>
   );
 };

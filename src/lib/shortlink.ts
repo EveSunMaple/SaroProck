@@ -16,7 +16,9 @@ async function generateShortHash(input: string): Promise<string> {
 
   // 将哈希值转换为16进制字符串
   const hashArray = Array.from(new Uint8Array(hashBuffer));
-  const hexHash = hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+  const hexHash = hashArray
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
 
   // 返回哈希值的前7位，这足以在大多数情况下保证唯一性
   return hexHash.substring(0, 7);
@@ -27,7 +29,10 @@ interface ShortLinkOptions {
   slug?: CollectionEntry<"blog">["slug"];
 }
 
-export async function getShortLink({ longUrl, slug }: ShortLinkOptions): Promise<string | null> {
+export async function getShortLink({
+  longUrl,
+  slug,
+}: ShortLinkOptions): Promise<string | null> {
   const cacheKey = slug || longUrl;
   if (cache.has(cacheKey)) {
     return cache.get(cacheKey)!;
@@ -57,8 +62,7 @@ export async function getShortLink({ longUrl, slug }: ShortLinkOptions): Promise
       if (sinkSlugRegex.test(slug)) {
         // 如果 slug 合规（英文/数字），直接使用
         bodyPayload.slug = slug;
-      }
-      else {
+      } else {
         // 如果 slug 不合规（包含中文等），则为其生成一个固定的哈希值
         const hashedSlug = await generateShortHash(slug);
         bodyPayload.slug = hashedSlug;
@@ -70,14 +74,16 @@ export async function getShortLink({ longUrl, slug }: ShortLinkOptions): Promise
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "Authorization": `Bearer ${apiKey}`,
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(bodyPayload),
     });
 
     if (!response.ok) {
       const errorBody = await response.text();
-      throw new Error(`Sink API request failed: ${response.status} - ${errorBody}`);
+      throw new Error(
+        `Sink API request failed: ${response.status} - ${errorBody}`,
+      );
     }
 
     const data = await response.json();
@@ -90,8 +96,7 @@ export async function getShortLink({ longUrl, slug }: ShortLinkOptions): Promise
       return shortUrl;
     }
     return null;
-  }
-  catch (error) {
+  } catch (error) {
     console.error(`Failed to get short link for ${longUrl}:`, error);
     return null;
   }

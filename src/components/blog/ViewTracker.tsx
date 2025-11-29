@@ -8,15 +8,13 @@ interface Props {
 // 仅在客户端运行，用 localStorage 保证每个 slug 每个设备只计一次浏览
 const ViewTracker: React.FC<Props> = ({ slug }) => {
   useEffect(() => {
-    if (typeof window === "undefined")
-      return;
+    if (typeof window === "undefined") return;
 
     const storageKey = "viewed_blog_slugs";
     const raw = localStorage.getItem(storageKey);
     const viewed = new Set<string>(raw ? JSON.parse(raw) : []);
 
-    if (viewed.has(slug))
-      return;
+    if (viewed.has(slug)) return;
 
     viewed.add(slug);
     localStorage.setItem(storageKey, JSON.stringify(Array.from(viewed)));

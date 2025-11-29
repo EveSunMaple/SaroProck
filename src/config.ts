@@ -8,4 +8,12 @@ export const ADMIN_USER = {
 };
 
 // 你不希望用户使用的名称与邮箱
-export const SENSITIVE_USERS = ["evesunmaple", "EveSunMaple", "sunmaple", "SunMaple", "admin", "博主", "evesunmaple@outlook.com"];
+export const SENSITIVE_USERS = [
+  "evesunmaple",
+  "EveSunMaple",
+  "sunmaple",
+  "SunMaple",
+  "admin",
+  "博主",
+  "evesunmaple@outlook.com",
+];

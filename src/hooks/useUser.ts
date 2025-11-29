@@ -32,27 +32,23 @@ export const useUser = () => {
           isAdmin: true,
         });
         setIsLoggedIn(true);
-      }
-      else {
+      } else {
         // 如果不是管理员，检查本地访客信息
         const storedGuest = localStorage.getItem(GUEST_USER_STORAGE_KEY);
         if (storedGuest) {
           const guestUser = JSON.parse(storedGuest);
           setUser(guestUser);
           setIsLoggedIn(true); // 访客也视为“已登录”状态
-        }
-        else {
+        } else {
           setUser(null);
           setIsLoggedIn(false);
         }
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error checking user status:", error);
       setUser(null);
       setIsLoggedIn(false);
-    }
-    finally {
+    } finally {
       setIsLoading(false);
     }
   }, []);
@@ -62,7 +58,11 @@ export const useUser = () => {
     checkUserStatus();
   }, [checkUserStatus]);
 
-  const saveGuestUser = (userInfo: { nickname: string; email: string; website?: string }) => {
+  const saveGuestUser = (userInfo: {
+    nickname: string;
+    email: string;
+    website?: string;
+  }) => {
     const emailHash = md5(userInfo.email.trim().toLowerCase());
     const avatar = `https://cravatar.cn/avatar/${emailHash}?d=mp`;
 
@@ -89,5 +89,12 @@ export const useUser = () => {
     setIsLoggedIn(false);
   }, []);
 
-  return { user, isLoggedIn, isLoading, checkUserStatus, saveGuestUser, logout };
+  return {
+    user,
+    isLoggedIn,
+    isLoading,
+    checkUserStatus,
+    saveGuestUser,
+    logout,
+  };
 };

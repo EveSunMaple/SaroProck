@@ -26,7 +26,9 @@ export async function GET({ request }: APIContext): Promise<Response> {
   const slug = url.searchParams.get("slug");
 
   if (!slug) {
-    return new Response(JSON.stringify({ error: "缺少 slug 参数" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "缺少 slug 参数" }), {
+      status: 400,
+    });
   }
 
   try {
@@ -39,10 +41,11 @@ export async function GET({ request }: APIContext): Promise<Response> {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching post views:", error);
-    return new Response(JSON.stringify({ error: "服务器内部错误" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "服务器内部错误" }), {
+      status: 500,
+    });
   }
 }
 
@@ -54,7 +57,10 @@ export async function POST({ request }: APIContext): Promise<Response> {
     const { slug } = await request.json();
 
     if (!slug) {
-      return new Response(JSON.stringify({ success: false, message: "缺少 slug 参数" }), { status: 400 });
+      return new Response(
+        JSON.stringify({ success: false, message: "缺少 slug 参数" }),
+        { status: 400 },
+      );
     }
 
     const now = new Date();
@@ -93,17 +99,22 @@ export async function POST({ request }: APIContext): Promise<Response> {
       dailyViews.save(),
     ]);
 
-    return new Response(JSON.stringify({
-      success: true,
-      slug,
-      totalViews: savedPostViews.get("views") || 0,
-      dailyViews: savedDailyViews.get("views") || 0,
-      date: dateKey,
-      timestamp: now.toISOString(),
-    }), { status: 200 });
-  }
-  catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        slug,
+        totalViews: savedPostViews.get("views") || 0,
+        dailyViews: savedDailyViews.get("views") || 0,
+        date: dateKey,
+        timestamp: now.toISOString(),
+      }),
+      { status: 200 },
+    );
+  } catch (error) {
     console.error("Error recording post view:", error);
-    return new Response(JSON.stringify({ success: false, message: "服务器内部错误" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ success: false, message: "服务器内部错误" }),
+      { status: 500 },
+    );
   }
 }

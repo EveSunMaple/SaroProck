@@ -1,5 +1,6 @@
 // src/components/comments/CommentForm.tsx
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { useUser } from "@/hooks/useUser";
 
 interface Props {
@@ -13,7 +14,16 @@ interface Props {
   onCancelReply?: () => void;
 }
 
-const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCommentAdded, displayMode = "full", loading = false, isReply = false, onCancelReply }) => {
+const CommentForm: React.FC<Props> = ({
+  identifier,
+  commentType,
+  parentId,
+  onCommentAdded,
+  displayMode = "full",
+  loading = false,
+  isReply = false,
+  onCancelReply,
+}) => {
   const { user, isLoggedIn, logout, isLoading: isUserLoading } = useUser();
   const [content, setContent] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -21,14 +31,15 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
 
   useEffect(() => {
     if (typeof window !== "undefined") {
-      setRedirectHref(`/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+      setRedirectHref(
+        `/login?redirect=${encodeURIComponent(window.location.pathname + window.location.search)}`,
+      );
     }
   }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!isLoggedIn || !user || content.trim() === "")
-      return;
+    if (!isLoggedIn || !user || content.trim() === "") return;
     setSubmitting(true);
 
     try {
@@ -54,15 +65,12 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
         if (isReply && onCancelReply) {
           onCancelReply();
         }
-      }
-      else {
+      } else {
         console.error("Error submitting comment:", result.message);
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Network error submitting comment:", error);
-    }
-    finally {
+    } finally {
       setSubmitting(false);
     }
   };
@@ -82,28 +90,32 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
           required
           minLength={2}
           placeholder="输入回复内容..."
-          autoFocus
-        >
-        </textarea>
+        />
         <div className="flex justify-end items-center gap-2">
-          <button type="button" onClick={onCancelReply} className="btn btn-ghost btn-sm rounded-lg">
+          <button
+            type="button"
+            onClick={onCancelReply}
+            className="btn btn-ghost btn-sm rounded-lg"
+          >
             <i className="ri-close-line" />
             取消
           </button>
-          <button type="submit" className="btn btn-primary btn-sm rounded-lg gap-1" disabled={submitting}>
-            {submitting
-              ? (
-                  <>
-                    <span className="loading loading-spinner loading-xs" />
-                    发送中...
-                  </>
-                )
-              : (
-                  <>
-                    <i className="ri-send-plane-2-line" />
-                    回复
-                  </>
-                )}
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm rounded-lg gap-1"
+            disabled={submitting}
+          >
+            {submitting ? (
+              <>
+                <span className="loading loading-spinner loading-xs" />
+                发送中...
+              </>
+            ) : (
+              <>
+                <i className="ri-send-plane-2-line" />
+                回复
+              </>
+            )}
           </button>
         </div>
       </form>
@@ -123,11 +135,22 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
             onChange={(e) => setContent(e.target.value)}
             required
           />
-          <button type="submit" className="btn btn-primary btn-sm btn-circle shrink-0" disabled={submitting || loading} aria-label="发送评论">
-            {loading || submitting ? <span className="loading loading-spinner loading-xs"></span> : <i className="ri-send-plane-2-line"></i>}
+          <button
+            type="submit"
+            className="btn btn-primary btn-sm btn-circle shrink-0"
+            disabled={submitting || loading}
+            aria-label="发送评论"
+          >
+            {loading || submitting ? (
+              <span className="loading loading-spinner loading-xs" />
+            ) : (
+              <i className="ri-send-plane-2-line" />
+            )}
           </button>
           <div className="avatar w-8 h-8 shrink-0">
-            <div className="rounded-full"><img src={user.avatar} alt={user.nickname} /></div>
+            <div className="rounded-full">
+              <img src={user.avatar} alt={user.nickname} />
+            </div>
           </div>
         </form>
       );
@@ -136,37 +159,56 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
     return (
       <div className="loggedIn-form">
         <div className="flex items-center gap-3 mb-4">
-          <div className="avatar w-10 h-10"><div className="rounded-full"><img src={user.avatar} alt={user.nickname} /></div></div>
+          <div className="avatar w-10 h-10">
+            <div className="rounded-full">
+              <img src={user.avatar} alt={user.nickname} />
+            </div>
+          </div>
           <div className="flex-grow">
             <p className="font-semibold">
               {user.nickname}
-              {user.isAdmin && <span className="badge badge-primary badge-sm ml-2">博主</span>}
+              {user.isAdmin && (
+                <span className="badge badge-primary badge-sm ml-2">博主</span>
+              )}
             </p>
             <p className="text-xs text-base-content/60">{user.email}</p>
           </div>
-          <button onClick={logout} className="btn btn-ghost btn-sm rounded-lg">
+          <button
+            type="button"
+            onClick={logout}
+            className="btn btn-ghost btn-sm rounded-lg"
+          >
             <i className="ri-logout-circle-line" />
             登出
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <textarea value={content} onChange={(e) => setContent(e.target.value)} className="textarea textarea-bordered rounded-xl h-24 w-full" required minLength={2} placeholder="留下你的评论..."></textarea>
+          <textarea
+            value={content}
+            onChange={(e) => setContent(e.target.value)}
+            className="textarea textarea-bordered rounded-xl h-24 w-full"
+            required
+            minLength={2}
+            placeholder="留下你的评论..."
+          />
           <div className="flex justify-between items-center">
             <span className="text-xs text-base-content/60">支持 Markdown</span>
-            <button type="submit" className="btn btn-primary btn-sm rounded-lg gap-1" disabled={submitting || loading}>
-              {submitting
-                ? (
-                    <>
-                      <span className="loading loading-spinner loading-xs" />
-                      发送中...
-                    </>
-                  )
-                : (
-                    <>
-                      <i className="ri-send-plane-2-line" />
-                      发送
-                    </>
-                  )}
+            <button
+              type="submit"
+              className="btn btn-primary btn-sm rounded-lg gap-1"
+              disabled={submitting || loading}
+            >
+              {submitting ? (
+                <>
+                  <span className="loading loading-spinner loading-xs" />
+                  发送中...
+                </>
+              ) : (
+                <>
+                  <i className="ri-send-plane-2-line" />
+                  发送
+                </>
+              )}
             </button>
           </div>
         </form>
@@ -177,9 +219,11 @@ const CommentForm: React.FC<Props> = ({ identifier, commentType, parentId, onCom
   // 未登录状态
   return (
     <div className="loggedOut-form flex flex-col items-center justify-center text-center p-8 bg-base-200/40 rounded-xl border border-base-content/10">
-      <p className="mb-4 text-base-content/80">为了更好地交流，请先留下你的足迹。</p>
+      <p className="mb-4 text-base-content/80">
+        为了更好地交流，请先留下你的足迹。
+      </p>
       <a href={redirectHref} className="btn btn-primary rounded-lg">
-        <i className="ri-user-smile-line mr-1"></i>
+        <i className="ri-user-smile-line mr-1" />
         登录以发表评论
       </a>
     </div>

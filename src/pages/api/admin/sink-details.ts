@@ -7,7 +7,10 @@ async function proxyToSinkAPI(
   event: APIContext,
 ) {
   if (!sinkApiKey || !sinkUrl) {
-    return new Response(JSON.stringify({ error: "Sink API URL or Key is not configured." }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "Sink API URL or Key is not configured." }),
+      { status: 500 },
+    );
   }
 
   const requestUrl = new URL(event.request.url);
@@ -48,8 +51,16 @@ async function proxyToSinkAPI(
 
     if (!response.ok) {
       const errorText = await response.text();
-      console.error(`Error from Sink API (${targetUrl.toString()}):`, errorText);
-      return new Response(JSON.stringify({ error: `Failed to fetch from Sink API: ${errorText}` }), { status: response.status });
+      console.error(
+        `Error from Sink API (${targetUrl.toString()}):`,
+        errorText,
+      );
+      return new Response(
+        JSON.stringify({
+          error: `Failed to fetch from Sink API: ${errorText}`,
+        }),
+        { status: response.status },
+      );
     }
 
     const data = await response.json();
@@ -57,16 +68,19 @@ async function proxyToSinkAPI(
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error: any) {
-    return new Response(JSON.stringify({ error: error.message }), { status: 500 });
+  } catch (error: any) {
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+    });
   }
 }
 
 export async function GET(event: APIContext): Promise<Response> {
   const adminUser = getAdminUser(event);
   if (!adminUser) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 403,
+    });
   }
 
   // [修改] 从环境变量中读取基础配置
@@ -76,16 +90,17 @@ export async function GET(event: APIContext): Promise<Response> {
   const url = new URL(event.request.url);
   const reportType = url.searchParams.get("report");
 
-  let sinkUrl;
+  let sinkUrl: string | undefined;
   // [修改] 动态构建 Sink URL
   if (reportType === "views") {
     sinkUrl = sinkBaseUrl ? `${sinkBaseUrl}/api/stats/views` : undefined;
-  }
-  else if (reportType === "metrics") {
+  } else if (reportType === "metrics") {
     sinkUrl = sinkBaseUrl ? `${sinkBaseUrl}/api/stats/metrics` : undefined;
-  }
-  else {
-    return new Response(JSON.stringify({ error: "Invalid report type specified." }), { status: 400 });
+  } else {
+    return new Response(
+      JSON.stringify({ error: "Invalid report type specified." }),
+      { status: 400 },
+    );
   }
 
   return proxyToSinkAPI(sinkUrl, sinkApiKey, event);

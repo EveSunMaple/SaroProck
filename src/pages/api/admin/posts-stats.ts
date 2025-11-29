@@ -1,6 +1,7 @@
 // src/pages/api/admin/posts-stats.ts
-import type { APIContext } from "astro";
+
 import { getCollection } from "astro:content";
+import type { APIContext } from "astro";
 import AV from "leancloud-storage";
 import { getAdminUser } from "@/lib/auth";
 import { initLeanCloud } from "@/lib/leancloud.server";
@@ -16,7 +17,9 @@ export async function GET(context: APIContext): Promise<Response> {
   // 权限验证
   const adminUser = getAdminUser(context);
   if (!adminUser) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 403,
+    });
   }
 
   try {
@@ -66,7 +69,10 @@ export async function GET(context: APIContext): Promise<Response> {
     telegramComments.forEach((comment) => {
       const postId = comment.get("postId");
       if (postId) {
-        telegramCommentCounts.set(postId, (telegramCommentCounts.get(postId) || 0) + 1);
+        telegramCommentCounts.set(
+          postId,
+          (telegramCommentCounts.get(postId) || 0) + 1,
+        );
       }
     });
 
@@ -115,7 +121,10 @@ export async function GET(context: APIContext): Promise<Response> {
       const commentId = like.get("commentId");
       const slug = blogCommentToSlug.get(commentId);
       if (slug) {
-        commentLikeCountsByPost.set(slug, (commentLikeCountsByPost.get(slug) || 0) + 1);
+        commentLikeCountsByPost.set(
+          slug,
+          (commentLikeCountsByPost.get(slug) || 0) + 1,
+        );
       }
     });
 
@@ -123,7 +132,10 @@ export async function GET(context: APIContext): Promise<Response> {
       const commentId = like.get("commentId");
       const postId = telegramCommentToPostId.get(commentId);
       if (postId) {
-        commentLikeCountsByPost.set(postId, (commentLikeCountsByPost.get(postId) || 0) + 1);
+        commentLikeCountsByPost.set(
+          postId,
+          (commentLikeCountsByPost.get(postId) || 0) + 1,
+        );
       }
     });
 
@@ -137,13 +149,21 @@ export async function GET(context: APIContext): Promise<Response> {
         comments: commentCounts.get(slug) || 0,
         likes: postLikeCounts.get(slug) || 0,
         commentLikes: commentLikeCountsByPost.get(slug) || 0,
-        totalLikes: (postLikeCounts.get(slug) || 0) + (commentLikeCountsByPost.get(slug) || 0),
+        totalLikes:
+          (postLikeCounts.get(slug) || 0) +
+          (commentLikeCountsByPost.get(slug) || 0),
         views: postViewCounts.get(slug) || 0,
       };
     });
 
     // 获取所有动态的postId（从TelegramComment中提取）
-    const telegramPostIds = Array.from(new Set(telegramComments.map((c) => c.get("postId")).filter(Boolean) as string[]));
+    const telegramPostIds = Array.from(
+      new Set(
+        telegramComments
+          .map((c) => c.get("postId"))
+          .filter(Boolean) as string[],
+      ),
+    );
 
     // 构建动态统计
     const telegramStats = telegramPostIds.map((postId) => ({
@@ -153,7 +173,9 @@ export async function GET(context: APIContext): Promise<Response> {
       comments: telegramCommentCounts.get(postId) || 0,
       likes: postLikeCounts.get(postId) || 0,
       commentLikes: commentLikeCountsByPost.get(postId) || 0,
-      totalLikes: (postLikeCounts.get(postId) || 0) + (commentLikeCountsByPost.get(postId) || 0),
+      totalLikes:
+        (postLikeCounts.get(postId) || 0) +
+        (commentLikeCountsByPost.get(postId) || 0),
       views: postViewCounts.get(postId) || 0,
     }));
 
@@ -168,9 +190,11 @@ export async function GET(context: APIContext): Promise<Response> {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching posts stats:", error);
-    return new Response(JSON.stringify({ error: "Failed to fetch posts statistics" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch posts statistics" }),
+      { status: 500 },
+    );
   }
 }

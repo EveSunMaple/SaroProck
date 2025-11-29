@@ -68,7 +68,7 @@ if (!media || media.length === 0) return null;
   }
 </div>
 
-<script define:vars={{ mediaCount: media.length }}>
+<script define:vars={{ mediaCount: media.length }} is:inline>
   const carousel = document.getElementById("post-media-carousel");
   if (carousel) {
     const slides = carousel.querySelectorAll(".media-slide");
@@ -83,7 +83,7 @@ if (!media || media.length === 0) return null;
         slide.style.display = i === currentIndex ? "flex" : "none";
         const video = slide.querySelector("video");
         if (video) {
-          i === currentIndex ? video.play().catch((e) => {}) : video.pause();
+          i === currentIndex ? video.play().catch(() => {}) : video.pause();
         }
       });
       if (currentCounter) currentCounter.textContent = currentIndex + 1;

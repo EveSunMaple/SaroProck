@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import type React from "react";
+import { useState } from "react";
 import CommentsWrapper from "./CommentsWrapper";
 
 interface Props {
@@ -27,7 +28,11 @@ const InlineComments: React.FC<Props> = ({ identifier, commentType }) => {
 
   return (
     <div className="mt-2">
-      <CommentsWrapper identifier={identifier} commentType={commentType} displayMode="compact" />
+      <CommentsWrapper
+        identifier={identifier}
+        commentType={commentType}
+        displayMode="compact"
+      />
     </div>
   );
 };

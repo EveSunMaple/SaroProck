@@ -1,5 +1,6 @@
 // src/components/comments/CommentsWrapper.tsx
-import React, { useCallback, useEffect, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useState } from "react";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
 
@@ -37,7 +38,11 @@ const getDeviceId = (): string => {
   return deviceId;
 };
 
-const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode = "full" }) => {
+const CommentsWrapper: React.FC<Props> = ({
+  identifier,
+  commentType,
+  displayMode = "full",
+}) => {
   const [comments, setComments] = useState<CommentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [deviceId, setDeviceId] = useState<string | null>(null);
@@ -47,40 +52,46 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
   }, []);
 
   const fetchComments = useCallback(async () => {
-    if (!deviceId)
-      return;
+    if (!deviceId) return;
     setLoading(true);
     try {
       const url = `/api/comments?identifier=${encodeURIComponent(identifier)}&commentType=${commentType}&deviceId=${deviceId}`;
       const response = await fetch(url);
-      if (!response.ok)
-        throw new Error("Failed to fetch comments");
+      if (!response.ok) throw new Error("Failed to fetch comments");
 
       const results = await response.json();
       const commentMap = new Map<string, CommentData>();
 
-      results.forEach((c: any) => {
-        const commentId = c.id || c.objectId;
-        commentMap.set(commentId, {
-          ...c,
-          id: commentId,
-          createdAt: new Date(c.createdAt),
-          likes: c.likes || 0,
-          isLiked: c.isLiked || false,
-          parentId: c.parent?.objectId,
-          children: [],
-          level: 0,
-          commentType,
-          identifier,
-        });
-      });
+      results.forEach(
+        (
+          c: CommentData & {
+            objectId?: string;
+            parent?: { objectId?: string };
+          },
+        ) => {
+          const commentId = c.id || c.objectId || "";
+          if (!commentId) return;
+
+          commentMap.set(commentId, {
+            ...c,
+            id: commentId,
+            createdAt: new Date(c.createdAt),
+            likes: c.likes || 0,
+            isLiked: c.isLiked || false,
+            parentId: c.parent?.objectId || c.parentId,
+            children: [],
+            level: 0,
+            commentType,
+            identifier,
+          });
+        },
+      );
 
       const rootComments: CommentData[] = [];
       commentMap.forEach((comment) => {
         if (comment.parentId && commentMap.has(comment.parentId)) {
-          commentMap.get(comment.parentId)!.children.push(comment);
-        }
-        else {
+          commentMap.get(comment.parentId)?.children.push(comment);
+        } else {
           rootComments.push(comment);
         }
       });
@@ -89,7 +100,9 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
       const sortChildren = (nodes: CommentData[]) => {
         nodes.forEach((node) => {
           if (node.children.length > 0) {
-            node.children.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+            node.children.sort(
+              (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+            );
             sortChildren(node.children);
           }
         });
@@ -98,25 +111,31 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
 
       // 如果是 guestbook 模式，我们直接使用树形结构的顶层评论
       if (displayMode === "guestbook") {
-        rootComments.sort((a, b) => b.createdAt.getTime() - a.createdAt.getTime());
+        rootComments.sort(
+          (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+        );
         setComments(rootComments);
-      }
-      else {
+      } else {
         // 其他模式下，扁平化处理
         const flattenedComments: CommentData[] = [];
         const flatten = (comment: CommentData, level: number) => {
           const { children, ...rest } = comment;
           flattenedComments.push({ ...rest, level } as CommentData);
-          children.forEach((child) => flatten(child, level + 1));
+          for (const child of children) {
+            flatten(child, level + 1);
+          }
         };
-        rootComments.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime()).forEach((c) => flatten(c, 0));
+        const sortedComments = [...rootComments].sort(
+          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
+        );
+        for (const comment of sortedComments) {
+          flatten(comment, 0);
+        }
         setComments(flattenedComments);
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Error fetching comments:", error);
-    }
-    finally {
+    } finally {
       setLoading(false);
     }
   }, [identifier, commentType, deviceId, displayMode]);
@@ -133,58 +152,77 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
     }, 500);
   }, [fetchComments]);
 
-  const handleLike = useCallback(async (commentId: string) => {
-    if (!deviceId)
-      return;
+  const handleLike = useCallback(
+    async (commentId: string) => {
+      if (!deviceId) return;
 
-    // 乐观更新 UI
-    const updateLikesRecursively = (nodes: CommentData[]): CommentData[] => {
-      return nodes.map((node) => {
-        if (node.id === commentId) {
-          const isLiked = !node.isLiked;
-          const likes = node.likes + (isLiked ? 1 : -1);
-          return { ...node, isLiked, likes };
-        }
-        if (node.children && node.children.length > 0) {
-          return { ...node, children: updateLikesRecursively(node.children) };
-        }
-        return node;
-      });
-    };
-    setComments((prevComments) => updateLikesRecursively(prevComments));
+      // 乐观更新 UI
+      const updateLikesRecursively = (nodes: CommentData[]): CommentData[] => {
+        return nodes.map((node) => {
+          if (node.id === commentId) {
+            const isLiked = !node.isLiked;
+            const likes = node.likes + (isLiked ? 1 : -1);
+            return { ...node, isLiked, likes };
+          }
+          if (node.children && node.children.length > 0) {
+            return { ...node, children: updateLikesRecursively(node.children) };
+          }
+          return node;
+        });
+      };
+      setComments((prevComments) => updateLikesRecursively(prevComments));
 
-    try {
-      const response = await fetch("/api/comments/like", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ commentId, commentType, deviceId }),
-      });
-      if (!response.ok)
-        throw new Error("Like operation failed");
-      // 可选: 用后端返回的数据再次更新，确保数据同步
-      // const result = await response.json();
-      // fetchComments(); // 或者直接重新获取
-    }
-    catch (error) {
-      console.error("Error liking comment:", error);
-      fetchComments(); // 如果失败，则回滚
-    }
-  }, [deviceId, commentType, fetchComments]);
+      try {
+        const response = await fetch("/api/comments/like", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ commentId, commentType, deviceId }),
+        });
+        if (!response.ok) throw new Error("Like operation failed");
+        // 可选: 用后端返回的数据再次更新，确保数据同步
+        // const result = await response.json();
+        // fetchComments(); // 或者直接重新获取
+      } catch (error) {
+        console.error("Error liking comment:", error);
+        fetchComments(); // 如果失败，则回滚
+      }
+    },
+    [deviceId, commentType, fetchComments],
+  );
 
   if (displayMode === "guestbook") {
     return (
       <div className="not-prose">
         <div className="text-center mb-10">
-          <button className="btn btn-primary btn-wide rounded-lg" onClick={() => (window as any).guestbook_modal.showModal()}>
-            <i className="ri-pencil-line"></i>
+          <button
+            type="button"
+            className="btn btn-primary btn-wide rounded-lg"
+            onClick={() => {
+              const dialog = document.getElementById(
+                "guestbook_modal",
+              ) as HTMLDialogElement | null;
+              if (dialog && typeof dialog.showModal === "function") {
+                dialog.showModal();
+              }
+            }}
+          >
+            <i className="ri-pencil-line" />
             在留言板上留下我的卡片
           </button>
         </div>
 
-        <dialog id="guestbook_modal" className="modal modal-bottom sm:modal-middle">
+        <dialog
+          id="guestbook_modal"
+          className="modal modal-bottom sm:modal-middle"
+        >
           <div className="modal-box rounded-t-2xl sm:rounded-2xl">
             <form method="dialog">
-              <button className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2">✕</button>
+              <button
+                type="button"
+                className="btn btn-sm btn-circle btn-ghost absolute right-2 top-2"
+              >
+                ✕
+              </button>
             </form>
             <h3 className="font-bold text-lg mb-4">创建新留言</h3>
             <CommentForm
@@ -192,13 +230,16 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
               commentType={commentType}
               onCommentAdded={() => {
                 handleCommentAdded();
-                (window as any).guestbook_modal.close();
+                const modal = document.getElementById(
+                  "guestbook_modal",
+                ) as HTMLDialogElement | null;
+                if (modal) modal.close();
               }}
               displayMode="full"
             />
           </div>
           <form method="dialog" className="modal-backdrop">
-            <button>close</button>
+            <button type="submit">close</button>
           </form>
         </dialog>
 
@@ -219,10 +260,10 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
       {displayMode === "full" && (
         <>
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
-            <i className="ri-chat-3-line"></i>
+            <i className="ri-chat-3-line" />
             评论区
           </h2>
-          <div className="divider -mt-2 mb-6"></div>
+          <div className="divider -mt-2 mb-6" />
         </>
       )}
       <CommentForm
@@ -241,10 +282,15 @@ const CommentsWrapper: React.FC<Props> = ({ identifier, commentType, displayMode
       />
       {displayMode === "full" && (
         <div className="mt-6 text-sm text-right">
-          本评论区由
-          {" "}
-          <a href="https://github.com/EveSunMaple" className="text-primary" target="_blank" rel="noopener noreferrer">EveSunMaple</a>
-          {" "}
+          本评论区由{" "}
+          <a
+            href="https://github.com/EveSunMaple"
+            className="text-primary"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            EveSunMaple
+          </a>{" "}
           自主开发
         </div>
       )}

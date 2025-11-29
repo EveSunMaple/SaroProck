@@ -26,11 +26,15 @@ export async function GET(context: APIContext): Promise<Response> {
   if (!identifier) {
     const adminUser = getAdminUser(context);
     if (!adminUser) {
-      return new Response(JSON.stringify({ error: "Unauthorized: Admin access required." }), { status: 403 });
+      return new Response(
+        JSON.stringify({ error: "Unauthorized: Admin access required." }),
+        { status: 403 },
+      );
     }
 
     try {
-      const leanCloudClassName = commentType === "telegram" ? "TelegramComment" : "Comment";
+      const leanCloudClassName =
+        commentType === "telegram" ? "TelegramComment" : "Comment";
       const query = new AV.Query(leanCloudClassName);
       query.addDescending("createdAt"); // 管理页面按最新排序
       query.limit(limit);
@@ -46,21 +50,28 @@ export async function GET(context: APIContext): Promise<Response> {
         return commentJSON;
       });
 
-      return new Response(JSON.stringify({ comments, total: totalCount, page, limit }), {
-        status: 200,
-        headers: { "Content-Type": "application/json" },
-      });
-    }
-    catch (error) {
+      return new Response(
+        JSON.stringify({ comments, total: totalCount, page, limit }),
+        {
+          status: 200,
+          headers: { "Content-Type": "application/json" },
+        },
+      );
+    } catch (error) {
       console.error("Error fetching all comments for admin:", error);
-      return new Response(JSON.stringify({ error: "Failed to fetch all comments" }), { status: 500 });
+      return new Response(
+        JSON.stringify({ error: "Failed to fetch all comments" }),
+        { status: 500 },
+      );
     }
   }
 
   // 公开路由：获取特定页面的评论
   try {
-    const leanCloudClassName = commentType === "telegram" ? "TelegramComment" : "Comment";
-    const leanCloudLikeClassName = commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
+    const leanCloudClassName =
+      commentType === "telegram" ? "TelegramComment" : "Comment";
+    const leanCloudLikeClassName =
+      commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
 
     const query = new AV.Query(leanCloudClassName);
     query.equalTo(commentType === "telegram" ? "postId" : "slug", identifier);
@@ -107,10 +118,11 @@ export async function GET(context: APIContext): Promise<Response> {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching comments from backend:", error);
-    return new Response(JSON.stringify({ error: "Failed to fetch comments" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "Failed to fetch comments" }), {
+      status: 500,
+    });
   }
 }
 
@@ -121,11 +133,15 @@ export async function POST(context: APIContext): Promise<Response> {
     const { identifier, commentType, content, parentId, userInfo } = data;
 
     if (!identifier || !content) {
-      return new Response(JSON.stringify({ success: false, message: "缺少必要参数" }), { status: 400 });
+      return new Response(
+        JSON.stringify({ success: false, message: "缺少必要参数" }),
+        { status: 400 },
+      );
     }
 
     const adminUser = getAdminUser(context);
 
+    // biome-ignore lint/suspicious/noImplicitAnyLet: <>
     let finalUser;
     if (adminUser) {
       // 如果是管理员 (通过cookie验证)
@@ -136,11 +152,16 @@ export async function POST(context: APIContext): Promise<Response> {
         avatar: adminUser.avatar,
         isAdmin: true,
       };
-    }
-    else {
+    } else {
       // 如果是普通用户
       if (!userInfo || !userInfo.nickname || !userInfo.email) {
-        return new Response(JSON.stringify({ success: false, message: "普通用户需要提供用户信息" }), { status: 400 });
+        return new Response(
+          JSON.stringify({
+            success: false,
+            message: "普通用户需要提供用户信息",
+          }),
+          { status: 400 },
+        );
       }
       finalUser = {
         nickname: userInfo.nickname,
@@ -151,7 +172,8 @@ export async function POST(context: APIContext): Promise<Response> {
       };
     }
 
-    const leanCloudClassName = commentType === "telegram" ? "TelegramComment" : "Comment";
+    const leanCloudClassName =
+      commentType === "telegram" ? "TelegramComment" : "Comment";
     const Comment = AV.Object.extend(leanCloudClassName);
     const comment = new Comment();
 
@@ -168,34 +190,53 @@ export async function POST(context: APIContext): Promise<Response> {
     comment.set("isAdmin", finalUser.isAdmin); // 可以加一个字段来标识管理员评论
 
     if (parentId) {
-      const parentPointer = AV.Object.createWithoutData(leanCloudClassName, parentId);
+      const parentPointer = AV.Object.createWithoutData(
+        leanCloudClassName,
+        parentId,
+      );
       comment.set("parent", parentPointer);
     }
 
     const savedComment = await comment.save();
 
-    return new Response(JSON.stringify({ success: true, comment: savedComment.toJSON() }), { status: 201 });
-  }
-  catch (error) {
+    return new Response(
+      JSON.stringify({ success: true, comment: savedComment.toJSON() }),
+      { status: 201 },
+    );
+  } catch (error) {
     console.error("Error submitting comment from backend:", error);
-    return new Response(JSON.stringify({ success: false, message: "服务器内部错误" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ success: false, message: "服务器内部错误" }),
+      { status: 500 },
+    );
   }
 }
 
 export async function DELETE(context: APIContext): Promise<Response> {
   const adminUser = getAdminUser(context);
   if (!adminUser) {
-    return new Response(JSON.stringify({ success: false, message: "Unauthorized" }), { status: 403 });
+    return new Response(
+      JSON.stringify({ success: false, message: "Unauthorized" }),
+      { status: 403 },
+    );
   }
 
   try {
     const { commentId, commentType } = await context.request.json();
     if (!commentId || !commentType) {
-      return new Response(JSON.stringify({ success: false, message: "Missing commentId or commentType" }), { status: 400 });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Missing commentId or commentType",
+        }),
+        { status: 400 },
+      );
     }
 
-    const leanCloudClassName = commentType === "telegram" ? "TelegramComment" : "Comment";
-    const leanCloudLikeClassName = commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
+    const leanCloudClassName =
+      commentType === "telegram" ? "TelegramComment" : "Comment";
+    const leanCloudLikeClassName =
+      commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
 
     const objectsToDelete: AV.Object[] = [];
     const allCommentIds: string[] = [];
@@ -203,7 +244,10 @@ export async function DELETE(context: APIContext): Promise<Response> {
     // 递归查找所有子评论
     async function findChildren(parentId: string) {
       const query = new AV.Query(leanCloudClassName);
-      const parentPointer = AV.Object.createWithoutData(leanCloudClassName, parentId);
+      const parentPointer = AV.Object.createWithoutData(
+        leanCloudClassName,
+        parentId,
+      );
       query.equalTo("parent", parentPointer);
       const children = await query.find();
 
@@ -215,7 +259,10 @@ export async function DELETE(context: APIContext): Promise<Response> {
     }
 
     // 添加主评论
-    const mainComment = AV.Object.createWithoutData(leanCloudClassName, commentId);
+    const mainComment = AV.Object.createWithoutData(
+      leanCloudClassName,
+      commentId,
+    );
     objectsToDelete.push(mainComment);
     allCommentIds.push(commentId);
 
@@ -236,10 +283,21 @@ export async function DELETE(context: APIContext): Promise<Response> {
       await AV.Object.destroyAll(likesToDelete as AV.Object[]);
     }
 
-    return new Response(JSON.stringify({ success: true, message: `Deleted ${objectsToDelete.length} comment(s) and ${likesToDelete.length} like(s).` }), { status: 200 });
-  }
-  catch (error: any) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: `Deleted ${objectsToDelete.length} comment(s) and ${likesToDelete.length} like(s).`,
+      }),
+      { status: 200 },
+    );
+  } catch (error: any) {
     console.error("Error deleting comment:", error);
-    return new Response(JSON.stringify({ success: false, message: error.message || "Server internal error" }), { status: 500 });
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: error.message || "Server internal error",
+      }),
+      { status: 500 },
+    );
   }
 }

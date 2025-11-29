@@ -99,7 +99,7 @@ const coverImage = media[0].thumbnail || media[0].url;
   </div>
 </dialog>
 
-<script define:vars={{ postId, mediaCount: media.length }}>
+<script define:vars={{ postId, mediaCount: media.length }} is:inline>
   const dialog = document.getElementById(`viewer-${postId}`);
   if (dialog) {
     const slides = dialog.querySelectorAll(".media-slide");
@@ -116,7 +116,7 @@ const coverImage = media[0].thumbnail || media[0].url;
           slide.style.display = "flex";
           const video = slide.querySelector("video");
           if (video)
-            video.play().catch((e) => console.log("Autoplay prevented"));
+            video.play().catch(() => console.log("Autoplay prevented"));
         } else {
           slide.style.display = "none";
           // 暂停其他视频

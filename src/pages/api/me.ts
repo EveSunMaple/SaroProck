@@ -19,11 +19,10 @@ export async function GET(context: APIContext): Promise<Response> {
       { status: 200, headers: { "Content-Type": "application/json" } },
     );
   }
-  else {
-    // 如果没有 token 或 token 无效，返回未登录状态
-    return new Response(
-      JSON.stringify({ isLoggedIn: false, isAdmin: false }),
-      { status: 200, headers: { "Content-Type": "application/json" } },
-    );
-  }
+
+  // 如果没有 token 或 token 无效，返回未登录状态
+  return new Response(JSON.stringify({ isLoggedIn: false, isAdmin: false }), {
+    status: 200,
+    headers: { "Content-Type": "application/json" },
+  });
 }

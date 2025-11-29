@@ -1,9 +1,11 @@
 // src/components/AudioPlayer.tsx
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type React from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 
 // 定义 props 类型
 interface AudioPlayerProps {
   src: string; // 音频文件的路径 (例如: /music/song.mp3)
+  captionsSrc?: string; // 可选的字幕轨道（WebVTT）
 }
 
 // 歌词行数据结构
@@ -29,8 +31,7 @@ const parseLyrics = (rawLyrics: string): LyricLine[] => {
   const rawLines = rawLyrics.split("\n");
 
   rawLines.forEach((line) => {
-    if (!line || line.startsWith("{"))
-      return;
+    if (!line || line.startsWith("{")) return;
     const match = line.match(lrcPattern);
 
     if (match) {
@@ -50,7 +51,7 @@ const parseLyrics = (rawLyrics: string): LyricLine[] => {
   return lines.sort((a, b) => a.time - b.time);
 };
 
-const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
+const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, captionsSrc }) => {
   // --- 状态和引用 ---
   const [rawLyrics, setRawLyrics] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
@@ -67,9 +68,10 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
     return rawLyrics ? parseLyrics(rawLyrics) : [];
   }, [rawLyrics]);
 
-  const currentLyricLine = currentLineIndex >= 0 && parsedLyrics[currentLineIndex]
-    ? parsedLyrics[currentLineIndex].text
-    : "（歌词加载中...）";
+  const currentLyricLine =
+    currentLineIndex >= 0 && parsedLyrics[currentLineIndex]
+      ? parsedLyrics[currentLineIndex].text
+      : "（歌词加载中...）";
 
   // --- 歌词同步逻辑 ---
   const findCurrentLyric = useCallback((time: number, lyrics: LyricLine[]) => {
@@ -84,10 +86,15 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
   // --- 歌词滚动逻辑 ---
   useEffect(() => {
     if (lyricScrollRef.current && currentLineIndex >= 0) {
-      const targetElement = lyricScrollRef.current.children[currentLineIndex + 1] as HTMLElement; // +1 因为第一个子元素是填充 div
+      const targetElement = lyricScrollRef.current.children[
+        currentLineIndex + 1
+      ] as HTMLElement; // +1 因为第一个子元素是填充 div
       if (targetElement) {
         // 滚动到目标元素，使其在容器中居中
-        const offset = targetElement.offsetTop - (lyricScrollRef.current.offsetHeight / 2) + (targetElement.offsetHeight / 2);
+        const offset =
+          targetElement.offsetTop -
+          lyricScrollRef.current.offsetHeight / 2 +
+          targetElement.offsetHeight / 2;
 
         lyricScrollRef.current.scrollTo({
           top: offset,
@@ -99,8 +106,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
 
   // --- 效果钩子：用于加载和解析元数据 ---
   useEffect(() => {
-    if (!src)
-      return;
+    if (!src) return;
     setRawLyrics(null);
     setError(null);
     setIsPlaying(false);
@@ -120,15 +126,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
 
         let extractedLyrics = "（无歌词）";
         if (metadata.common.lyrics && metadata.common.lyrics.length > 0) {
-          extractedLyrics = metadata.common.lyrics[0].text;
+          const firstLyric = metadata.common.lyrics[0];
+          extractedLyrics = firstLyric?.text || extractedLyrics;
           setRawLyrics(extractedLyrics);
-        }
-        else {
+        } else {
           setError("未在此文件中找到内嵌歌词。");
           setRawLyrics(extractedLyrics);
         }
-      }
-      catch (e) {
+      } catch (e) {
         console.error("Error in loading or parsing metadata:", e);
         const errorMessage = e instanceof Error ? e.message : "发生未知错误。";
         setError(`加载或解析标签失败: ${errorMessage}`);
@@ -143,13 +148,27 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
     if (audioRef.current) {
       if (isPlaying) {
         audioRef.current.pause();
-      }
-      else {
+      } else {
         audioRef.current.play().catch((e) => {
           console.error("Audio playback failed:", e);
         });
       }
       setIsPlaying(!isPlaying);
+    }
+  };
+
+  const handleProgressKeyDown = (
+    event: React.KeyboardEvent<HTMLDivElement>,
+  ): void => {
+    if (event.key === "Enter" || event.key === " ") {
+      // 防止页面滚动
+      event.preventDefault();
+      // 模拟点击行为
+      const syntheticEvent = {
+        ...event,
+        currentTarget: event.currentTarget,
+      } as unknown as React.MouseEvent<HTMLDivElement>;
+      handleProgressClick(syntheticEvent);
     }
   };
 
@@ -177,7 +196,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
     setCurrentLineIndex(-1);
   };
 
-  const handleProgressClick = (e: React.MouseEvent<HTMLProgressElement>) => {
+  const handleProgressClick = (e: React.MouseEvent<HTMLDivElement>) => {
     if (audioRef.current && duration > 0) {
       const progressElement = e.currentTarget;
       const rect = progressElement.getBoundingClientRect();
@@ -201,49 +220,64 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
         onLoadedMetadata={handleLoadedMetadata}
         onEnded={handleEnded}
         preload="metadata"
-      />
+      >
+        {captionsSrc && (
+          <track
+            kind="captions"
+            src={captionsSrc}
+            label="歌词字幕"
+            srcLang="zh-CN"
+          />
+        )}
+      </audio>
       <div className="relative mt-4">
-        {error && <p className="text-error text-sm text-center mb-2">{error}</p>}
+        {error && (
+          <p className="text-error text-sm text-center mb-2">{error}</p>
+        )}
         <div
           ref={lyricScrollRef}
           className="max-h-64 h-64 overflow-y-scroll scrollbar-none transition-all duration-300 px-4"
         >
-          <div className="h-1/2 min-h-1/2 pt-4"></div>
+          <div className="h-1/2 min-h-1/2 pt-4" />
 
           {parsedLyrics.length > 0
-            ? (
-                parsedLyrics.map((line, index) => (
-                  <p
-                    key={index}
-                    className={`py-1 text-base transition-all duration-300 text-center 
-                    ${index === currentLineIndex
-                    ? "text-primary font-bold scale-110"
-                    : "text-base-content/80 hover:text-base-content/100"
-                  }`}
-                  >
-                    {line.text}
-                  </p>
-                ))
-              )
-            : (
-                !error && <div className="flex justify-center p-4 text-sm text-base-content/80">正在加载歌词...</div>
+            ? parsedLyrics.map((line, index) => (
+                <p
+                  key={`${line.time}-${index}`}
+                  className={`py-1 text-base transition-all duration-300 text-center 
+                    ${
+                      index === currentLineIndex
+                        ? "text-primary font-bold scale-110"
+                        : "text-base-content/80 hover:text-base-content/100"
+                    }`}
+                >
+                  {line.text}
+                </p>
+              ))
+            : !error && (
+                <div className="flex justify-center p-4 text-sm text-base-content/80">
+                  正在加载歌词...
+                </div>
               )}
 
-          <div className="h-1/2 min-h-1/2 pb-4"></div>
+          <div className="h-1/2 min-h-1/2 pb-4" />
         </div>
 
-        <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-base-100 to-transparent pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-base-100 to-transparent pointer-events-none" />
 
-        <div className="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-base-100 to-transparent pointer-events-none"></div>
+        <div className="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-base-100 to-transparent pointer-events-none" />
       </div>
       <div className="flex items-center gap-3 px-4 py-2 bg-base-200 rounded-full shadow-xl">
         <button
+          type="button"
           className="btn btn-primary btn-circle flex-shrink-0 w-10 h-10 min-h-10"
           onClick={togglePlayPause}
           aria-label={isPlaying ? "Pause" : "Play"}
           disabled={!duration}
         >
-          <i className={`text-xl ${isPlaying ? "ri-pause-fill" : "ri-play-fill"}`} />
+          <i
+            className={`text-xl ${isPlaying ? "ri-pause-fill" : "ri-play-fill"}`}
+          />
         </button>
 
         <div className="flex-1 min-w-0">
@@ -253,12 +287,22 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src }) => {
             </span>
           </div>
 
-          <progress
-            className="progress progress-primary w-full h-2 cursor-pointer"
-            value={currentTime}
-            max={duration || 1}
+          <div
+            className="w-full h-2 bg-base-200 rounded-full overflow-hidden cursor-pointer"
             onClick={handleProgressClick}
-          />
+            tabIndex={0}
+            onKeyDown={handleProgressKeyDown}
+            role="slider"
+            aria-valuemin={0}
+            aria-valuemax={duration || 1}
+            aria-valuenow={currentTime}
+            aria-valuetext={`${Math.round((currentTime / (duration || 1)) * 100)}%`}
+          >
+            <div
+              className="h-full bg-primary transition-all duration-200"
+              style={{ width: `${(currentTime / (duration || 1)) * 100}%` }}
+            />
+          </div>
           <div className="flex justify-between text-[10px] text-base-content/70 px-1 mt-0.5">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>

@@ -1,5 +1,6 @@
 // src/components/comments/LoginForm.tsx
-import React, { useEffect, useState } from "react";
+import type React from "react";
+import { useEffect, useState } from "react";
 import { SENSITIVE_USERS } from "@/config";
 import { useUser } from "@/hooks/useUser";
 
@@ -18,17 +19,18 @@ const LoginForm: React.FC = () => {
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const redirect = params.get("redirect");
-    if (redirect)
-      setRedirectUrl(redirect);
+    if (redirect) setRedirectUrl(redirect);
   }, []);
 
   useEffect(() => {
     const lowerNickname = nickname.trim().toLowerCase();
     const lowerEmail = email.trim().toLowerCase();
-    if (SENSITIVE_USERS.includes(lowerNickname) || SENSITIVE_USERS.includes(lowerEmail)) {
+    if (
+      SENSITIVE_USERS.includes(lowerNickname) ||
+      SENSITIVE_USERS.includes(lowerEmail)
+    ) {
       setIsPasswordRequired(true);
-    }
-    else {
+    } else {
       setIsPasswordRequired(false);
       setPassword("");
     }
@@ -62,22 +64,18 @@ const LoginForm: React.FC = () => {
       if (response.ok && data.success) {
         if (data.isAdmin) {
           window.location.href = redirectUrl;
-        }
-        else {
+        } else {
           saveGuestUser({ nickname, email, website });
           window.location.href = redirectUrl;
         }
-      }
-      else {
+      } else {
         // 登录失败，显示后端返回的错误信息
         setError(data.message || "验证失败，请重试。");
       }
-    }
-    catch (error) {
+    } catch (error) {
       console.error("Login error:", error);
       setError("网络错误，请稍后重试。");
-    }
-    finally {
+    } finally {
       setIsSubmitting(false);
     }
   };
@@ -97,12 +95,16 @@ const LoginForm: React.FC = () => {
 
         <div className="space-y-4">
           <div className="form-control">
-            <label className="label font-medium text-base-content mb-2">
+            <label
+              htmlFor="nickname"
+              className="label font-medium text-base-content mb-2"
+            >
               昵称
               <span className="text-error ml-0.5">*</span>
             </label>
             <input
               type="text"
+              id="nickname"
               value={nickname}
               onChange={(e) => setNickname(e.target.value)}
               className="input input-bordered rounded-xl w-full"
@@ -114,12 +116,16 @@ const LoginForm: React.FC = () => {
           </div>
 
           <div className="form-control">
-            <label className="label font-medium text-base-content mb-2">
+            <label
+              htmlFor="email"
+              className="label font-medium text-base-content mb-2"
+            >
               邮箱
               <span className="text-error ml-0.5">*</span>
             </label>
             <input
               type="email"
+              id="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               className="input input-bordered rounded-xl w-full"
@@ -129,12 +135,16 @@ const LoginForm: React.FC = () => {
           </div>
 
           <div className="form-control">
-            <label className="label font-medium text-base-content mb-2">
+            <label
+              htmlFor="website"
+              className="label font-medium text-base-content mb-2"
+            >
               网站
               <span className="text-base-content/50">(可选)</span>
             </label>
             <input
               type="url"
+              id="website"
               value={website}
               onChange={(e) => setWebsite(e.target.value)}
               className="input input-bordered rounded-xl w-full"
@@ -144,12 +154,16 @@ const LoginForm: React.FC = () => {
 
           {isPasswordRequired && (
             <div className="form-control transition-all duration-300 animate-fade-in">
-              <label className="label font-medium text-base-content mb-2">
+              <label
+                htmlFor="admin-password"
+                className="label font-medium text-base-content mb-2"
+              >
                 管理员密码
                 <span className="text-error ml-0.5">*</span>
               </label>
               <input
                 type="password"
+                id="admin-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="input input-bordered input-primary rounded-xl w-full"
@@ -167,7 +181,11 @@ const LoginForm: React.FC = () => {
         )}
 
         <div className="flex justify-end pt-4">
-          <button type="submit" className={`btn btn-primary rounded-lg gap-1 ${isSubmitting ? "loading" : ""}`} disabled={isSubmitting}>
+          <button
+            type="submit"
+            className={`btn btn-primary rounded-lg gap-1 ${isSubmitting ? "loading" : ""}`}
+            disabled={isSubmitting}
+          >
             {isSubmitting ? "处理中..." : "保存并返回"}
             <i className="ri-arrow-right-line" />
           </button>

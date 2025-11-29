@@ -15,7 +15,9 @@ export async function GET({ request }: APIContext): Promise<Response> {
   const postId = url.searchParams.get("postId");
 
   if (!postId) {
-    return new Response(JSON.stringify({ error: "缺少 postId" }), { status: 400 });
+    return new Response(JSON.stringify({ error: "缺少 postId" }), {
+      status: 400,
+    });
   }
 
   try {
@@ -28,10 +30,11 @@ export async function GET({ request }: APIContext): Promise<Response> {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching like status:", error);
-    return new Response(JSON.stringify({ error: "服务器内部错误" }), { status: 500 });
+    return new Response(JSON.stringify({ error: "服务器内部错误" }), {
+      status: 500,
+    });
   }
 }
 
@@ -41,7 +44,13 @@ export async function POST({ request }: APIContext): Promise<Response> {
     const { postId, delta } = await request.json();
 
     if (!postId || typeof delta !== "number" || !Number.isFinite(delta)) {
-      return new Response(JSON.stringify({ success: false, message: "缺少 postId 或非法的 delta" }), { status: 400 });
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "缺少 postId 或非法的 delta",
+        }),
+        { status: 400 },
+      );
     }
 
     // 1. 准备点赞统计对象
@@ -61,12 +70,20 @@ export async function POST({ request }: APIContext): Promise<Response> {
     (postStats as AV.Object)?.increment("likes", delta);
 
     const savedStats = await postStats?.save();
-    const finalLikeCount = Math.max(0, savedStats ? (savedStats.get("likes") || 0) : 0);
+    const finalLikeCount = Math.max(
+      0,
+      savedStats ? savedStats.get("likes") || 0 : 0,
+    );
 
-    return new Response(JSON.stringify({ success: true, likeCount: finalLikeCount }), { status: 200 });
-  }
-  catch (error) {
+    return new Response(
+      JSON.stringify({ success: true, likeCount: finalLikeCount }),
+      { status: 200 },
+    );
+  } catch (error) {
     console.error("Error toggling like:", error);
-    return new Response(JSON.stringify({ success: false, message: "服务器内部错误" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ success: false, message: "服务器内部错误" }),
+      { status: 500 },
+    );
   }
 }

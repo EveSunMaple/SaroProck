@@ -5,8 +5,10 @@ import { getCollection } from "astro:content";
 const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
 if (allPosts.length === 0) return Astro.redirect("/");
 
-const randomPost = allPosts[Math.floor(Math.random() * allPosts.length)];
-const redirectUrl = encodeURI(`/blog/${randomPost.slug}`);
-
-return Astro.redirect(redirectUrl, 307);
+return Astro.redirect(
+  encodeURI(
+    `/blog/${allPosts[Math.floor(Math.random() * allPosts.length)].slug}`,
+  ),
+  307,
+);
 ---

@@ -1,11 +1,10 @@
 ---
 import type { CollectionEntry } from "astro:content";
 
-interface Props {
+const { post, author } = Astro.props as {
   post: CollectionEntry<"blog">;
   author: string;
-}
-const { post, author } = Astro.props;
+};
 const { tags, categories } = post.data;
 ---
 

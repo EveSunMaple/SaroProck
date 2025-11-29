@@ -1,15 +1,14 @@
 ---
-import { getCollection, type CollectionEntry } from "astro:content";
-import Layout from "@layouts/Layout.astro";
+import type { CollectionEntry } from "astro:content";
 import PostFooter from "@components/blog/PostFooter.astro";
 import ShareButtons from "@components/blog/ShareButtons.astro";
 import Comments from "@components/comments/Comments.astro";
+import Figure from "@components/markdown/Figure.astro";
+import Layout from "@layouts/Layout.astro";
 import BlogLikeButton from "@/components/blog/LikeButton";
 import ViewTracker from "@/components/blog/ViewTracker";
-import dayjs from "@/lib/telegram/dayjs-setup";
 import { getAllPostsWithShortLinks } from "@/lib/blog";
-
-import Figure from "@components/markdown/Figure.astro";
+import dayjs from "@/lib/telegram/dayjs-setup";
 
 export const prerender = true;
 

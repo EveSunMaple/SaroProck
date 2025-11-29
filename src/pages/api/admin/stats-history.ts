@@ -15,7 +15,9 @@ export async function GET(context: APIContext): Promise<Response> {
   // 权限验证
   const adminUser = getAdminUser(context);
   if (!adminUser) {
-    return new Response(JSON.stringify({ error: "Unauthorized" }), { status: 403 });
+    return new Response(JSON.stringify({ error: "Unauthorized" }), {
+      status: 403,
+    });
   }
 
   const url = new URL(context.request.url);
@@ -59,14 +61,24 @@ export async function GET(context: APIContext): Promise<Response> {
     ]);
 
     // 按日期分组统计每日新增（所有历史数据）
-    const commentsByDate = new Map<string, { blog: number; telegram: number; total: number }>();
-    const likesByDate = new Map<string, { posts: number; comments: number; total: number }>();
+    const commentsByDate = new Map<
+      string,
+      { blog: number; telegram: number; total: number }
+    >();
+    const likesByDate = new Map<
+      string,
+      { posts: number; comments: number; total: number }
+    >();
 
     // 统计所有历史评论（按创建日期）
     blogComments.forEach((comment) => {
       const createdAt = new Date(comment.get("createdAt"));
       const dateKey = createdAt.toISOString().split("T")[0];
-      const stats = commentsByDate.get(dateKey) || { blog: 0, telegram: 0, total: 0 };
+      const stats = commentsByDate.get(dateKey) || {
+        blog: 0,
+        telegram: 0,
+        total: 0,
+      };
       stats.blog++;
       stats.total++;
       commentsByDate.set(dateKey, stats);
@@ -75,7 +87,11 @@ export async function GET(context: APIContext): Promise<Response> {
     telegramComments.forEach((comment) => {
       const createdAt = new Date(comment.get("createdAt"));
       const dateKey = createdAt.toISOString().split("T")[0];
-      const stats = commentsByDate.get(dateKey) || { blog: 0, telegram: 0, total: 0 };
+      const stats = commentsByDate.get(dateKey) || {
+        blog: 0,
+        telegram: 0,
+        total: 0,
+      };
       stats.telegram++;
       stats.total++;
       commentsByDate.set(dateKey, stats);
@@ -85,7 +101,11 @@ export async function GET(context: APIContext): Promise<Response> {
     blogCommentLikes.forEach((like) => {
       const createdAt = new Date(like.get("createdAt"));
       const dateKey = createdAt.toISOString().split("T")[0];
-      const stats = likesByDate.get(dateKey) || { posts: 0, comments: 0, total: 0 };
+      const stats = likesByDate.get(dateKey) || {
+        posts: 0,
+        comments: 0,
+        total: 0,
+      };
       stats.comments++;
       stats.total++;
       likesByDate.set(dateKey, stats);
@@ -94,7 +114,11 @@ export async function GET(context: APIContext): Promise<Response> {
     telegramCommentLikes.forEach((like) => {
       const createdAt = new Date(like.get("createdAt"));
       const dateKey = createdAt.toISOString().split("T")[0];
-      const stats = likesByDate.get(dateKey) || { posts: 0, comments: 0, total: 0 };
+      const stats = likesByDate.get(dateKey) || {
+        posts: 0,
+        comments: 0,
+        total: 0,
+      };
       stats.comments++;
       stats.total++;
       likesByDate.set(dateKey, stats);
@@ -102,8 +126,12 @@ export async function GET(context: APIContext): Promise<Response> {
 
     // 获取所有日期并排序（从最早到最晚）
     const allDates = new Set<string>();
-    commentsByDate.forEach((_, date) => allDates.add(date));
-    likesByDate.forEach((_, date) => allDates.add(date));
+    commentsByDate.forEach((_, date) => {
+      allDates.add(date);
+    });
+    likesByDate.forEach((_, date) => {
+      allDates.add(date);
+    });
     const sortedAllDates = Array.from(allDates).sort();
 
     // 计算从最早日期到每个日期的真实累计数（包括各分类的累计）
@@ -113,18 +141,29 @@ export async function GET(context: APIContext): Promise<Response> {
     let cumulativeCommentsTelegram = 0;
     let cumulativeLikesPosts = 0;
     let cumulativeLikesComments = 0;
-    const cumulativeData = new Map<string, {
-      comments: number;
-      likes: number;
-      commentsBlog: number;
-      commentsTelegram: number;
-      likesPosts: number;
-      likesComments: number;
-    }>();
+    const cumulativeData = new Map<
+      string,
+      {
+        comments: number;
+        likes: number;
+        commentsBlog: number;
+        commentsTelegram: number;
+        likesPosts: number;
+        likesComments: number;
+      }
+    >();
 
     sortedAllDates.forEach((dateKey) => {
-      const commentStats = commentsByDate.get(dateKey) || { blog: 0, telegram: 0, total: 0 };
-      const likeStats = likesByDate.get(dateKey) || { posts: 0, comments: 0, total: 0 };
+      const commentStats = commentsByDate.get(dateKey) || {
+        blog: 0,
+        telegram: 0,
+        total: 0,
+      };
+      const likeStats = likesByDate.get(dateKey) || {
+        posts: 0,
+        comments: 0,
+        total: 0,
+      };
 
       cumulativeComments += commentStats.total;
       cumulativeLikes += likeStats.total;
@@ -180,8 +219,16 @@ export async function GET(context: APIContext): Promise<Response> {
       date.setDate(date.getDate() + i);
       const dateKey = date.toISOString().split("T")[0];
 
-      const commentStats = commentsByDate.get(dateKey) || { blog: 0, telegram: 0, total: 0 };
-      const likeStats = likesByDate.get(dateKey) || { posts: 0, comments: 0, total: 0 };
+      const commentStats = commentsByDate.get(dateKey) || {
+        blog: 0,
+        telegram: 0,
+        total: 0,
+      };
+      const likeStats = likesByDate.get(dateKey) || {
+        posts: 0,
+        comments: 0,
+        total: 0,
+      };
 
       // 获取该日期的累计数，如果不存在则使用前一个日期的累计数
       let commentsCumulative = lastCommentsCumulative;
@@ -207,12 +254,27 @@ export async function GET(context: APIContext): Promise<Response> {
       }
 
       // 更新最后的累计数（确保单调递增）
-      lastCommentsCumulative = Math.max(lastCommentsCumulative, commentsCumulative);
+      lastCommentsCumulative = Math.max(
+        lastCommentsCumulative,
+        commentsCumulative,
+      );
       lastLikesCumulative = Math.max(lastLikesCumulative, likesCumulative);
-      lastCommentsBlogCumulative = Math.max(lastCommentsBlogCumulative, commentsBlogCumulative);
-      lastCommentsTelegramCumulative = Math.max(lastCommentsTelegramCumulative, commentsTelegramCumulative);
-      lastLikesPostsCumulative = Math.max(lastLikesPostsCumulative, likesPostsCumulative);
-      lastLikesCommentsCumulative = Math.max(lastLikesCommentsCumulative, likesCommentsCumulative);
+      lastCommentsBlogCumulative = Math.max(
+        lastCommentsBlogCumulative,
+        commentsBlogCumulative,
+      );
+      lastCommentsTelegramCumulative = Math.max(
+        lastCommentsTelegramCumulative,
+        commentsTelegramCumulative,
+      );
+      lastLikesPostsCumulative = Math.max(
+        lastLikesPostsCumulative,
+        likesPostsCumulative,
+      );
+      lastLikesCommentsCumulative = Math.max(
+        lastLikesCommentsCumulative,
+        likesCommentsCumulative,
+      );
 
       historyData.push({
         date: dateKey,
@@ -239,9 +301,11 @@ export async function GET(context: APIContext): Promise<Response> {
       status: 200,
       headers: { "Content-Type": "application/json" },
     });
-  }
-  catch (error) {
+  } catch (error) {
     console.error("Error fetching stats history:", error);
-    return new Response(JSON.stringify({ error: "Failed to fetch statistics history" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ error: "Failed to fetch statistics history" }),
+      { status: 500 },
+    );
   }
 }

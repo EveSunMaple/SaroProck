@@ -11,10 +11,14 @@ export async function POST({ request }: APIContext): Promise<Response> {
     const { commentId, commentType, deviceId } = await request.json();
 
     if (!commentId || !deviceId || !commentType) {
-      return new Response(JSON.stringify({ success: false, message: "缺少必要参数" }), { status: 400 });
+      return new Response(
+        JSON.stringify({ success: false, message: "缺少必要参数" }),
+        { status: 400 },
+      );
     }
 
-    const leanCloudLikeClassName = commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
+    const leanCloudLikeClassName =
+      commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
     const Like = AV.Object.extend(leanCloudLikeClassName);
     const query = new AV.Query(leanCloudLikeClassName);
 
@@ -26,8 +30,7 @@ export async function POST({ request }: APIContext): Promise<Response> {
     if (existingLike) {
       // 如果已存在，则取消点赞 (删除记录)
       await existingLike.destroy();
-    }
-    else {
+    } else {
       // 如果不存在，则创建新点赞记录
       const newLike = new Like();
       newLike.set("commentId", commentId);
@@ -40,14 +43,19 @@ export async function POST({ request }: APIContext): Promise<Response> {
     countQuery.equalTo("commentId", commentId);
     const totalLikes = await countQuery.count();
 
-    return new Response(JSON.stringify({
-      success: true,
-      likes: totalLikes,
-      isLiked: !existingLike, // 返回当前的点赞状态
-    }), { status: 200 });
-  }
-  catch (error) {
+    return new Response(
+      JSON.stringify({
+        success: true,
+        likes: totalLikes,
+        isLiked: !existingLike, // 返回当前的点赞状态
+      }),
+      { status: 200 },
+    );
+  } catch (error) {
     console.error("Error processing like:", error);
-    return new Response(JSON.stringify({ success: false, message: "服务器内部错误" }), { status: 500 });
+    return new Response(
+      JSON.stringify({ success: false, message: "服务器内部错误" }),
+      { status: 500 },
+    );
   }
 }

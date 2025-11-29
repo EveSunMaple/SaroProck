@@ -1,9 +1,9 @@
 ---
+import FeedCard from "@components/feed/FeedCard.astro";
+import Pagination from "@components/feed/Pagination.astro";
 // src/pages/index.astro
 import Layout from "@layouts/Layout.astro";
 import TelegramLayout from "@layouts/TelegramLayout.astro";
-import FeedCard from "@components/feed/FeedCard.astro";
-import Pagination from "@components/feed/Pagination.astro";
 import { getChannelFeed } from "@/lib/telegram";
 
 const { searchParams } = Astro.url;

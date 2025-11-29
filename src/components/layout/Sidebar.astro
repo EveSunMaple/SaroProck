@@ -1,7 +1,7 @@
 ---
-import type { MarkdownHeading } from "astro";
 import { getCollection } from "astro:content";
 import TOC from "@components/blog/TOC.astro";
+import type { MarkdownHeading } from "astro";
 
 export interface Props {
   author: string;
@@ -17,7 +17,7 @@ const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
 const allPosts = await getCollection("blog", ({ data }) => data.draft !== true);
 const countWords = (text: string) => {
   text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
-  text = text.replace(/[`*~_#+\-!\[\]{}()>|]/g, "");
+  text = text.replace(/[`*~_#+\-![\]{}()>|]/g, "");
   const cjkChars = text.match(/[\u4e00-\u9fa5]/g)?.length || 0;
   const otherWords =
     text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g)?.length || 0;
@@ -186,7 +186,7 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
   </div>
 </aside>
 
-<script define:vars={{ QQ_GROUP_NUMBER }}>
+<script define:vars={{ QQ_GROUP_NUMBER }} is:inline>
   document.addEventListener("DOMContentLoaded", () => {
     const copyChannelBtn = document.getElementById("copy-channel-btn");
     const channelLinkElement = document.getElementById("telegram-channel-link");
