@@ -46,6 +46,35 @@ SaroProck 是 **静态博客 + 动态博客** 的结合体，内置评论、搜�
 
 ---
 
+## ✅ 代码质量与检查流程
+
+这个仓库对代码质量要求比较严格，默认启用以下检查：
+
+- **Astro 类型检查**：
+  - 使用官方 `astro-check`，对 `.astro`、TS/JS 等进行完整类型检查。
+- **Biome lint + format**：
+  - 统一使用 [Biome](https://biomejs.dev/) 做 ESLint + Prettier 职能：
+  - `pnpm biome:check`：只检查，不修改文件；
+  - `pnpm biome:format`：对 `./src` 进行格式化；
+  - `biome.json` 中开启推荐规则，并按项目需求定制安全/可读性规则。
+- **本地一键检查**：
+  - `pnpm check-all`
+  - 等价于依次执行：`pnpm astro-check && pnpm biome:check`。
+- **Git hooks（提交前检查）**：
+  - 使用 Husky + lint-staged，在 `git commit` 前自动对改动的 `*.{js,jsx,ts,tsx}` 运行：
+    - `biome check --config-path biome.json --write`
+  - 确保进入提交历史的代码已经通过 lint & format。
+- **CI / CD 工作流**：
+  - GitHub Actions 中配置了 `CI` workflow：
+    - 安装依赖（pnpm）
+    - `pnpm astro-check`
+    - `pnpm biome:check`
+  - 只有所有检查全部通过时，CI 才会变绿。
+
+> 当前 `main` 分支在 CI 上通过：Astro 检查与 Biome 检查均为 **0 errors / 0 warnings**。
+
+---
+
 ## 🛠️ 关于部署
 
 推荐使用 **Vercel** 部署，简单易用，无需服务器。
