@@ -19,12 +19,18 @@ const TWITTER_HANDLE = "@EveSunMaple";
 const GITHUB_URL = "https://github.com/EveSunMaple";
 const TELEGRAM_URL = "https://t.me/saroprock";
 
+interface BreadcrumbItem {
+  label: string;
+  href?: string;
+}
+
 export interface Props {
   title: string;
   description?: string;
   image?: string;
   headings?: MarkdownHeading[];
   showHero?: boolean;
+  breadcrumbs?: BreadcrumbItem[] | null;
 }
 
 const {
@@ -33,6 +39,7 @@ const {
   image = OG_IMAGE_DEFAULT,
   headings = [],
   showHero = title === "首页",
+  breadcrumbs: providedBreadcrumbs,
 } = Astro.props;
 
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
@@ -46,6 +53,35 @@ const navLinks = [
   { href: "/friends", label: "朋友" },
   { href: "/guestbook", label: "留言" },
 ];
+
+const navLookup = new Map(navLinks.map((link) => [link.href, link.label]));
+
+const buildDefaultBreadcrumbs = () => {
+  if (title === "首页") return null;
+
+  const segments = currentPath.split("/").filter(Boolean);
+  const crumbs: BreadcrumbItem[] = [{ label: "首页", href: "/" }];
+
+  if (segments.length === 0) {
+    crumbs.push({ label: title });
+    return crumbs;
+  }
+
+  segments.forEach((_, index) => {
+    const path = `/${segments.slice(0, index + 1).join("/")}`;
+    const isLast = index === segments.length - 1;
+
+    if (!isLast) {
+      const label = navLookup.get(path) ?? segments[index];
+      crumbs.push({ label, href: path });
+    }
+  });
+
+  crumbs.push({ label: title });
+  return crumbs;
+};
+
+const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
 ---
 
 <!doctype html>
@@ -124,7 +160,10 @@ const navLinks = [
           <div class="p-5 space-y-6 overflow-y-auto flex-1">
             <nav class="flex flex-col gap-2" aria-label="主要导航">
               {navLinks.map((link) => {
-                const isActive = currentPath.startsWith(link.href);
+                const isActive =
+                  link.href === "/"
+                    ? currentPath === "/"
+                    : currentPath === link.href || currentPath.startsWith(`${link.href}/`);
                 return (
                   <a
                     href={link.href}
@@ -194,6 +233,42 @@ const navLinks = [
     >
       <div class="grid grid-cols-1 lg:grid-cols-4 gap-4">
         <main class="lg:col-span-3 min-h-[60vh]">
+          {breadcrumbs && (
+            <nav
+              class="flex items-center gap-2 text-sm text-base-content/60 mb-8 no-print"
+              aria-label="面包屑导航"
+            >
+              <ol class="flex items-center gap-2">
+                {breadcrumbs.map((item, index) => {
+                  const isLast = index === breadcrumbs.length - 1;
+                  return (
+                    <li class="flex items-center gap-2">
+                      {index > 0 && (
+                        <i class="ri-arrow-right-s-line text-base-content/40" aria-hidden="true"></i>
+                      )}
+                      {item.href && !isLast ? (
+                        <a
+                          href={item.href}
+                          class="hover:text-primary transition-colors duration-200"
+                        >
+                          {item.label}
+                        </a>
+                      ) : (
+                        <span
+                          class:list={{
+                            "text-base-content/80 font-medium": isLast,
+                          }}
+                        >
+                          {item.label}
+                        </span>
+                      )}
+                    </li>
+                  );
+                })}
+              </ol>
+            </nav>
+          )}
+
           <slot />
         </main>
 

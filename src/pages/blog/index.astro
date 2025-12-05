@@ -1,14 +1,11 @@
 ---
-import Layout from "@layouts/Layout.astro";
-import BlogExplorer from "@components/blog/BlogExplorer";
 import { getCollection } from "astro:content";
+import BlogExplorer from "@components/blog/BlogExplorer";
+import Layout from "@layouts/Layout.astro";
 
 export const prerender = true;
 
-const posts = await getCollection(
-  "blog",
-  ({ data }) => data.draft !== true,
-);
+const posts = await getCollection("blog", ({ data }) => data.draft !== true);
 
 const computeReadingMetrics = (body: string) => {
   const plainText = body.replace(/---[\s\S]*?---/, "");
@@ -40,9 +37,12 @@ const blogPosts = posts
       coverImage: post.data.image ?? null,
     };
   })
-  .sort((a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime());
+  .sort(
+    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
+  );
 
-const pageDescription = "浏览所有博客文章，通过标签与分类智能筛选，快速找到你感兴趣的内容。";
+const pageDescription =
+  "浏览所有博客文章，通过标签与分类智能筛选，快速找到你感兴趣的内容。";
 ---
 
 <Layout title="博客" description={pageDescription} showHero={false}>

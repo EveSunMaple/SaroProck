@@ -43,7 +43,10 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
           aria-label="主导航"
         >
           {navLinks.map((link) => {
-            const isActive = currentPath.startsWith(link.href);
+            const isActive =
+              link.href === "/"
+                ? currentPath === "/"
+                : currentPath === link.href || currentPath.startsWith(`${link.href}/`);
             return (
               <a
                 href={link.href}
