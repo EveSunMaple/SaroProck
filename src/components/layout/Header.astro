@@ -1,6 +1,6 @@
 ---
 import "/node_modules/katex/dist/katex.min.css";
-import SearchBar from "@components/widgets/SearchBar.astro"; // 1. 引入搜索组件
+import SearchBar from "@components/widgets/SearchBar";
 
 export interface Props {
   siteTitle: string;
@@ -29,7 +29,7 @@ const { siteTitle } = Astro.props;
       </div>
 
       <div class="flex items-center">
-        <SearchBar />
+        <SearchBar client:load />
       </div>
     </div>
   </div>

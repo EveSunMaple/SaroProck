@@ -1,4 +1,3 @@
-/* eslint-disable style/max-statements-per-line */
 import type { APIRoute } from "astro";
 import { remark } from "remark";
 import strip from "strip-markdown";
