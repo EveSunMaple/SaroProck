@@ -199,66 +199,76 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
 </aside>
 
 <script
-  define:vars={{
-    QQ_GROUP_NUMBER,
-    copyChannelBtnId,
-    channelLinkId,
-    copyQqBtnId,
-  }}
   is:inline
+  data-qq-number={QQ_GROUP_NUMBER}
+  data-copy-channel-btn-id={copyChannelBtnId}
+  data-channel-link-id={channelLinkId}
+  data-copy-qq-btn-id={copyQqBtnId}
 >
+  const script = document.currentScript;
+  if (!(script instanceof HTMLScriptElement)) {
+    throw new Error("Missing script element to read dataset values.");
+  }
+
+  const { qqNumber, copyChannelBtnId, channelLinkId, copyQqBtnId } =
+    script.dataset;
+
   document.addEventListener("DOMContentLoaded", () => {
-    const copyChannelBtn = document.getElementById(copyChannelBtnId);
-    const channelLinkElement = document.getElementById(channelLinkId);
+    if (copyChannelBtnId && channelLinkId) {
+      const copyChannelBtn = document.getElementById(copyChannelBtnId);
+      const channelLinkElement = document.getElementById(channelLinkId);
 
-    if (copyChannelBtn && channelLinkElement) {
-      const copyIcon = copyChannelBtn.querySelector(".copy-icon");
-      const successIcon = copyChannelBtn.querySelector(".success-icon");
+      if (copyChannelBtn && channelLinkElement) {
+        const copyIcon = copyChannelBtn.querySelector(".copy-icon");
+        const successIcon = copyChannelBtn.querySelector(".success-icon");
 
-      copyChannelBtn.addEventListener("click", async () => {
-        const textToCopy = channelLinkElement.textContent;
-        if (!textToCopy || !copyIcon || !successIcon) return;
-        try {
-          await navigator.clipboard.writeText(textToCopy);
-          copyIcon.classList.add("hidden");
-          successIcon.classList.remove("hidden");
-          setTimeout(() => {
-            successIcon.classList.add("hidden");
-            copyIcon.classList.remove("hidden");
-          }, 2000);
-        } catch (err) {
-          console.error("无法复制频道地址:", err);
-        }
-      });
+        copyChannelBtn.addEventListener("click", async () => {
+          const textToCopy = channelLinkElement.textContent;
+          if (!textToCopy || !copyIcon || !successIcon) return;
+          try {
+            await navigator.clipboard.writeText(textToCopy);
+            copyIcon.classList.add("hidden");
+            successIcon.classList.remove("hidden");
+            setTimeout(() => {
+              successIcon.classList.add("hidden");
+              copyIcon.classList.remove("hidden");
+            }, 2000);
+          } catch (err) {
+            console.error("无法复制频道地址:", err);
+          }
+        });
+      }
     }
 
-    const copyQqBtn = document.getElementById(copyQqBtnId);
-    if (copyQqBtn) {
-      const originalText = copyQqBtn.innerHTML;
+    if (copyQqBtnId) {
+      const copyQqBtn = document.getElementById(copyQqBtnId);
+      if (copyQqBtn) {
+        const originalText = copyQqBtn.innerHTML;
 
-      copyQqBtn.addEventListener("click", () => {
-        if (!QQ_GROUP_NUMBER) return;
+        copyQqBtn.addEventListener("click", () => {
+          if (!qqNumber) return;
 
-        navigator.clipboard
-          .writeText(QQ_GROUP_NUMBER)
-          .then(() => {
-            copyQqBtn.innerHTML = '<i class="ri-check-line"></i> 复制成功';
-            copyQqBtn.classList.add("btn-success");
-            setTimeout(() => {
-              copyQqBtn.innerHTML = originalText;
-              copyQqBtn.classList.remove("btn-success");
-            }, 2000);
-          })
-          .catch((err) => {
-            console.error("无法复制QQ群号: ", err);
-            copyQqBtn.innerHTML = '<i class="ri-close-line"></i> 复制失败';
-            copyQqBtn.classList.add("btn-error", "text-error-content");
-            setTimeout(() => {
-              copyQqBtn.innerHTML = originalText;
-              copyQqBtn.classList.remove("btn-error", "text-error-content");
-            }, 2000);
-          });
-      });
+          navigator.clipboard
+            .writeText(qqNumber)
+            .then(() => {
+              copyQqBtn.innerHTML = '<i class="ri-check-line"></i> 复制成功';
+              copyQqBtn.classList.add("btn-success");
+              setTimeout(() => {
+                copyQqBtn.innerHTML = originalText;
+                copyQqBtn.classList.remove("btn-success");
+              }, 2000);
+            })
+            .catch((err) => {
+              console.error("无法复制QQ群号: ", err);
+              copyQqBtn.innerHTML = '<i class="ri-close-line"></i> 复制失败';
+              copyQqBtn.classList.add("btn-error", "text-error-content");
+              setTimeout(() => {
+                copyQqBtn.innerHTML = originalText;
+                copyQqBtn.classList.remove("btn-error", "text-error-content");
+              }, 2000);
+            });
+        });
+      }
     }
   });
 </script>

@@ -1,11 +1,29 @@
 ---
-import { getCollection } from "astro:content";
+import { type CollectionEntry, getCollection } from "astro:content";
 import BlogExplorer from "@components/blog/BlogExplorer";
 import Layout from "@layouts/Layout.astro";
 
 export const prerender = true;
 
-const posts = await getCollection("blog", ({ data }) => data.draft !== true);
+type BlogEntry = CollectionEntry<"blog">;
+
+interface BlogPostSummary {
+  slug: string;
+  title: string;
+  description: string;
+  categories: string[];
+  tags: string[];
+  words: number;
+  readingMinutes: number;
+  url: string;
+  pubDate: string;
+  coverImage: string | null;
+}
+
+const posts = await getCollection(
+  "blog",
+  (entry: BlogEntry) => entry.data.draft !== true,
+);
 
 const computeReadingMetrics = (body: string) => {
   const plainText = body.replace(/---[\s\S]*?---/, "");
@@ -20,8 +38,8 @@ const computeReadingMetrics = (body: string) => {
   return { words, totalMinutes };
 };
 
-const blogPosts = posts
-  .map((post) => {
+const blogPosts: BlogPostSummary[] = posts
+  .map((post: BlogEntry) => {
     const { words, totalMinutes } = computeReadingMetrics(post.body);
 
     return {

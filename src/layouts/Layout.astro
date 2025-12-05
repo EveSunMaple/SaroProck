@@ -294,8 +294,8 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
 
     <BackToTop />
     <script is:inline define:vars={{ mobileDrawerId }}>
+      const drawerId = mobileDrawerId;
       document.addEventListener("DOMContentLoaded", () => {
-        const drawerId = mobileDrawerId;
         const mobileDrawer = document.getElementById(drawerId);
         if (mobileDrawer instanceof HTMLDialogElement) {
           const panel = mobileDrawer.querySelector(".drawer-panel");
