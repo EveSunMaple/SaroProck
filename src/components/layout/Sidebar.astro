@@ -9,9 +9,21 @@ export interface Props {
   githubUrl: string;
   telegramUrl: string;
   headings?: MarkdownHeading[];
+  idPrefix?: string;
 }
 
-const { headings, author, twitterHandle, githubUrl, telegramUrl } = Astro.props;
+const {
+  headings,
+  author,
+  twitterHandle,
+  githubUrl,
+  telegramUrl,
+  idPrefix = "sidebar",
+} = Astro.props;
+
+const copyChannelBtnId = `${idPrefix}-copy-channel-btn`;
+const channelLinkId = `${idPrefix}-telegram-channel-link`;
+const copyQqBtnId = `${idPrefix}-copy-qq-btn`;
 
 // 动态统计数据 (无改动)
 const allPosts = await getCollection(
@@ -91,9 +103,6 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
           >
             <i class="ri-telegram-line text-lg"></i>
           </a>
-          <a href="/rss.xml" class="btn btn-outline btn-sm ml-auto rounded-lg">
-            浏览博客
-          </a>
         </div>
       </div>
 
@@ -108,12 +117,12 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
         >
           <i class="ri-telegram-fill text-base-content/70 ml-1 mr-2"></i>
           <span
-            id="telegram-channel-link"
+            id={channelLinkId}
             class="text-sm font-mono text-base-content/80 select-all"
             >t.me/saroprock</span
           >
           <button
-            id="copy-channel-btn"
+            id={copyChannelBtnId}
             type="button"
             class="btn btn-ghost btn-sm btn-circle absolute right-1"
             aria-label="复制频道地址"
@@ -167,7 +176,7 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
             </h3>
             <div class="space-y-2">
               <button
-                id="copy-qq-btn"
+                id={copyQqBtnId}
                 class="btn btn-sm btn-outline w-full rounded-lg"
                 data-qq-number={QQ_GROUP_NUMBER}
               >
@@ -189,10 +198,18 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
   </div>
 </aside>
 
-<script define:vars={{ QQ_GROUP_NUMBER }} is:inline>
+<script
+  define:vars={{
+    QQ_GROUP_NUMBER,
+    copyChannelBtnId,
+    channelLinkId,
+    copyQqBtnId,
+  }}
+  is:inline
+>
   document.addEventListener("DOMContentLoaded", () => {
-    const copyChannelBtn = document.getElementById("copy-channel-btn");
-    const channelLinkElement = document.getElementById("telegram-channel-link");
+    const copyChannelBtn = document.getElementById(copyChannelBtnId);
+    const channelLinkElement = document.getElementById(channelLinkId);
 
     if (copyChannelBtn && channelLinkElement) {
       const copyIcon = copyChannelBtn.querySelector(".copy-icon");
@@ -215,7 +232,7 @@ const EMAIL_ADDRESS = "evesunmaple@outlook.com";
       });
     }
 
-    const copyQqBtn = document.getElementById("copy-qq-btn");
+    const copyQqBtn = document.getElementById(copyQqBtnId);
     if (copyQqBtn) {
       const originalText = copyQqBtn.innerHTML;
 

@@ -38,6 +38,14 @@ const {
 const finalTitle = title === "首页" ? SITE_TITLE : `${title} | ${SITE_TITLE}`;
 const canonicalURL = new URL(Astro.url.pathname, Astro.site);
 const socialImageURL = new URL(image, Astro.site);
+const currentPath = Astro.url.pathname;
+const mobileDrawerId = "mobile-drawer";
+const navLinks = [
+  { href: "/", label: "首页" },
+  { href: "/blog", label: "博客" },
+  { href: "/friends", label: "朋友" },
+  { href: "/guestbook", label: "留言" },
+];
 ---
 
 <!doctype html>
@@ -81,7 +89,102 @@ const socialImageURL = new URL(image, Astro.site);
     <meta name="twitter:image" content={socialImageURL} />
   </head>
   <body class="bg-base-100 text-base-content min-h-screen topography">
-    <Header siteTitle={SITE_TITLE} />
+    <Header
+      siteTitle={SITE_TITLE}
+      navLinks={navLinks}
+      currentPath={currentPath}
+      mobileDrawerId={mobileDrawerId}
+    />
+
+    <dialog id={mobileDrawerId} class="modal" aria-label="移动端导航">
+      <div class="flex w-screen h-screen justify-start">
+        <div
+          class="w-80 max-w-[80vw] sm:max-w-sm h-full bg-base-100 shadow-2xl border-r border-base-content/10 flex flex-col drawer-panel"
+        >
+          <div class="bg-base-200/60 backdrop-blur-sm border-b border-base-content/10 p-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <span class="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary to-secondary text-primary-content">
+                <i class="ri-leaf-line" aria-hidden="true"></i>
+              </span>
+              <div>
+                <p class="font-semibold">导航</p>
+                <p class="text-xs text-base-content/60">探索站点与侧边栏内容</p>
+              </div>
+            </div>
+            <button
+              type="button"
+              class="btn btn-sm btn-ghost btn-circle"
+              aria-label="关闭导航"
+              data-close-drawer="true"
+            >
+              ✕
+            </button>
+          </div>
+
+          <div class="p-5 space-y-6 overflow-y-auto flex-1">
+            <nav class="flex flex-col gap-2" aria-label="主要导航">
+              {navLinks.map((link) => {
+                const isActive = currentPath.startsWith(link.href);
+                return (
+                  <a
+                    href={link.href}
+                    class:list={{
+                      "btn btn-ghost justify-start gap-3 rounded-xl": true,
+                      "btn-active btn-primary text-primary-content": isActive,
+                    }}
+                    aria-current={isActive ? "page" : undefined}
+                  >
+                    <i class="ri-arrow-right-s-line" aria-hidden="true" />
+                    <span>{link.label}</span>
+                  </a>
+                );
+              })}
+            </nav>
+
+            <div class="divider my-4" />
+
+            <div class="space-y-4">
+              <Sidebar
+                idPrefix="mobile-sidebar"
+                headings={headings}
+                author={SITE_AUTHOR}
+                twitterHandle={TWITTER_HANDLE}
+                githubUrl={GITHUB_URL}
+                telegramUrl={TELEGRAM_URL}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </dialog>
+
+    <style is:inline>
+      .drawer-panel {
+        transform: translateX(-100%);
+      }
+      @keyframes slideInDrawer {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(0);
+        }
+      }
+      dialog[open] .drawer-panel {
+        animation: slideInDrawer 0.3s ease forwards;
+      }
+      @keyframes slideOutDrawer {
+        from {
+          transform: translateX(0);
+        }
+        to {
+          transform: translateX(-100%);
+        }
+      }
+      dialog .drawer-panel.animate-out {
+        animation: slideOutDrawer 0.3s ease forwards;
+      }
+    </style>
 
     {showHero && <Hero siteDescription={SITE_DESCRIPTION} />}
 
@@ -94,13 +197,16 @@ const socialImageURL = new URL(image, Astro.site);
           <slot />
         </main>
 
-        <Sidebar
-          headings={headings}
-          author={SITE_AUTHOR}
-          twitterHandle={TWITTER_HANDLE}
-          githubUrl={GITHUB_URL}
-          telegramUrl={TELEGRAM_URL}
-        />
+        <div class="hidden lg:block lg:col-span-1">
+          <Sidebar
+            idPrefix="desktop-sidebar"
+            headings={headings}
+            author={SITE_AUTHOR}
+            twitterHandle={TWITTER_HANDLE}
+            githubUrl={GITHUB_URL}
+            telegramUrl={TELEGRAM_URL}
+          />
+        </div>
       </div>
     </div>
 
@@ -112,33 +218,53 @@ const socialImageURL = new URL(image, Astro.site);
     />
 
     <BackToTop />
-    <script is:inline>
+    <script is:inline define:vars={{ mobileDrawerId }}>
       document.addEventListener("DOMContentLoaded", () => {
-        document.querySelectorAll(".btn-copy").forEach((button) => {
-          button.addEventListener("click", async () => {
-            const codeBlock = button.closest(".saro-code");
-            const code = codeBlock.querySelector("code").textContent;
-            const copyIcon = button.querySelector(
-              ".saro-code-toolbar-copy-icon",
-            );
-            const successIcon = button.querySelector(
-              ".saro-code-toolbar-copy-success",
-            );
-            try {
-              await navigator.clipboard.writeText(code);
-              copyIcon.classList.add("hidden");
-              successIcon.classList.remove("hidden");
-              button.classList.add("copy-success");
-              setTimeout(() => {
-                copyIcon.classList.remove("hidden");
-                successIcon.classList.add("hidden");
-                button.classList.remove("copy-success");
-              }, 2000);
-            } catch (err) {
-              console.error("Failed to copy:", err);
+        const drawerId = mobileDrawerId;
+        const mobileDrawer = document.getElementById(drawerId);
+        if (mobileDrawer instanceof HTMLDialogElement) {
+          const panel = mobileDrawer.querySelector(".drawer-panel");
+
+          const closeDrawer = () => {
+            if (!mobileDrawer.open) return;
+            if (!panel) {
+              mobileDrawer.close();
+              return;
+            }
+            panel.classList.add("animate-out");
+            const handleAnimationEnd = () => {
+              panel.classList.remove("animate-out");
+              panel.removeEventListener("animationend", handleAnimationEnd);
+              if (mobileDrawer.open) {
+                mobileDrawer.close();
+              }
+            };
+            panel.addEventListener("animationend", handleAnimationEnd, { once: true });
+          };
+
+          mobileDrawer.querySelectorAll("[data-close-drawer]").forEach((element) => {
+            element.addEventListener("click", (event) => {
+              event.preventDefault();
+              closeDrawer();
+            });
+          });
+
+          mobileDrawer.addEventListener("cancel", (event) => {
+            event.preventDefault();
+            closeDrawer();
+          });
+
+          mobileDrawer.addEventListener("close", () => {
+            panel?.classList.remove("animate-out");
+          });
+
+          const observer = new MutationObserver(() => {
+            if (mobileDrawer.open) {
+              panel?.classList.remove("animate-out");
             }
           });
-        });
+          observer.observe(mobileDrawer, { attributes: true, attributeFilter: ["open"] });
+        }
       });
     </script>
   </body>

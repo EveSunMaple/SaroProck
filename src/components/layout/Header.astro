@@ -4,8 +4,11 @@ import SearchBar from "@components/widgets/SearchBar";
 
 export interface Props {
   siteTitle: string;
+  navLinks: { href: string; label: string }[];
+  currentPath: string;
+  mobileDrawerId: string;
 }
-const { siteTitle } = Astro.props;
+const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
 ---
 
 <header
@@ -14,7 +17,13 @@ const { siteTitle } = Astro.props;
   <div class="max-w-6xl mx-auto px-4 sm:px-6">
     <div class="flex items-center justify-between h-14">
       <div class="flex items-center space-x-3">
-        <a href="/" class="flex items-center space-x-2 group">
+        <a
+          href="/"
+          class="flex items-center space-x-2 group"
+          aria-controls={mobileDrawerId}
+          aria-haspopup="dialog"
+          onclick={`if (window.matchMedia('(min-width: 1024px)').matches) return; event.preventDefault(); document.getElementById('${mobileDrawerId}')?.showModal?.();`}
+        >
           <div
             class="w-7 h-7 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
           >
@@ -28,7 +37,36 @@ const { siteTitle } = Astro.props;
         </a>
       </div>
 
-      <div class="flex items-center">
+      <div class="hidden lg:flex items-center gap-6">
+        <nav
+          class="hidden md:flex items-center gap-4 text-sm font-medium"
+          aria-label="主导航"
+        >
+          {navLinks.map((link) => {
+            const isActive = currentPath.startsWith(link.href);
+            return (
+              <a
+                href={link.href}
+                class:list={{
+                  "relative inline-flex items-center gap-1 transition-colors": true,
+                  "text-primary font-semibold": isActive,
+                  "text-base-content/70 hover:text-primary": !isActive,
+                }}
+                aria-current={isActive ? "page" : undefined}
+              >
+                <span>{link.label}</span>
+                {isActive && (
+                  <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"></span>
+                )}
+              </a>
+            );
+          })}
+        </nav>
+
+        <SearchBar client:load />
+      </div>
+
+      <div class="flex items-center gap-2 lg:hidden">
         <SearchBar client:load />
       </div>
     </div>
