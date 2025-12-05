@@ -143,8 +143,8 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
                 <i class="ri-leaf-line" aria-hidden="true"></i>
               </span>
               <div>
-                <p class="font-semibold">导航</p>
-                <p class="text-xs text-base-content/60">探索站点与侧边栏内容</p>
+                <p class="font-semibold">サン猫の時間漂流</p>
+                <p class="text-xs text-base-content/60">所有的为时已晚都是恰逢其时</p>
               </div>
             </div>
             <button
@@ -156,7 +156,6 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
               ✕
             </button>
           </div>
-
           <div class="p-5 space-y-6 overflow-y-auto flex-1">
             <nav class="flex flex-col gap-2" aria-label="主要导航">
               {navLinks.map((link) => {
@@ -194,6 +193,14 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
             </div>
           </div>
         </div>
+        <button
+          type="button"
+          class="flex-1 h-full bg-black/10 hover:bg-black/20 transition-colors duration-200"
+          data-close-drawer="true"
+          aria-label="点击关闭导航"
+        >
+          <span class="sr-only">关闭导航</span>
+        </button>
       </div>
     </dialog>
 
