@@ -7,7 +7,7 @@ export const prerender = true;
 
 type BlogEntry = CollectionEntry<"blog">;
 
-interface BlogPostSummary {
+interface Post {
   slug: string;
   title: string;
   description: string;
@@ -38,7 +38,7 @@ const computeReadingMetrics = (body: string) => {
   return { words, totalMinutes };
 };
 
-const blogPosts: BlogPostSummary[] = posts
+const blogPosts: Post[] = posts
   .map((post: BlogEntry) => {
     const { words, totalMinutes } = computeReadingMetrics(post.body);
 
@@ -56,7 +56,8 @@ const blogPosts: BlogPostSummary[] = posts
     };
   })
   .sort(
-    (a, b) => new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
+    (a: Post, b: Post) =>
+      new Date(b.pubDate).getTime() - new Date(a.pubDate).getTime(),
   );
 
 const pageDescription =
