@@ -1,0 +1,117 @@
+---
+export interface Props {
+  author: string;
+  twitterHandle: string;
+  githubUrl: string;
+  telegramUrl: string;
+  channelUrl: string;
+  qqGroupNumber: string;
+  emailAddress: string;
+}
+
+const {
+  author,
+  twitterHandle,
+  githubUrl,
+  telegramUrl,
+  channelUrl,
+  qqGroupNumber,
+  emailAddress,
+} = Astro.props;
+---
+
+<section class="space-y-5">
+  <div class="bg-base-200/50 border border-base-content/10 rounded-2xl p-4 backdrop-blur-sm shadow-sm">
+    <div class="flex items-center gap-3 mb-3">
+      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-content flex items-center justify-center text-xl font-semibold">
+        <span>猫</span>
+      </div>
+      <div>
+        <p class="text-xs uppercase tracking-wide text-base-content/60">Author</p>
+        <p class="text-base-content font-semibold">{author}</p>
+        <p class="text-xs text-base-content/60">记录、写作、构建</p>
+      </div>
+    </div>
+    <p class="text-sm text-base-content/70 leading-relaxed">
+      分享技术与生活的灵感碎片，欢迎随时来聊。
+    </p>
+    <div class="flex gap-2 mt-3">
+      <a
+        href={`https://twitter.com/${twitterHandle.replace("@", "")}`}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-sm btn-ghost flex-1 gap-2 rounded-xl"
+        data-close-drawer="true"
+      >
+        <i class="ri-twitter-line text-lg" aria-hidden="true" />
+        Twitter
+      </a>
+      <a
+        href={githubUrl}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="btn btn-sm btn-ghost flex-1 gap-2 rounded-xl"
+        data-close-drawer="true"
+      >
+        <i class="ri-github-line text-lg" aria-hidden="true" />
+        GitHub
+      </a>
+    </div>
+    <a
+      href={telegramUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="btn btn-primary btn-sm w-full mt-3 rounded-xl gap-2"
+      data-close-drawer="true"
+    >
+      <i class="ri-telegram-line" aria-hidden="true" />
+      Telegram
+    </a>
+  </div>
+
+  <div class="bg-base-200/50 border border-base-content/10 rounded-2xl p-4 space-y-4 backdrop-blur-sm shadow-sm">
+    <div class="flex items-center justify-between">
+      <div>
+        <p class="text-sm font-semibold">我的频道</p>
+        <p class="text-xs text-base-content/60">不定期推送灵感笔记</p>
+      </div>
+      <i class="ri-radar-line text-lg text-primary" aria-hidden="true" />
+    </div>
+    <a
+      href={channelUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="flex items-center justify-between bg-base-100 rounded-2xl border border-base-content/10 px-4 py-3"
+      data-close-drawer="true"
+    >
+      <span class="font-mono text-sm text-base-content/80 truncate">
+        {channelUrl.replace(/^https?:\/\//, "")}
+      </span>
+      <i class="ri-external-link-line text-base-content/50" aria-hidden="true" />
+    </a>
+  </div>
+
+  <div class="bg-base-200/50 border border-base-content/10 rounded-2xl p-4 space-y-3 backdrop-blur-sm shadow-sm">
+    <div class="flex items-center gap-2 text-sm font-semibold">
+      <i class="ri-user-shared-line text-primary" aria-hidden="true" />
+      联系方式
+    </div>
+    <div class="flex items-center justify-between bg-base-100 rounded-2xl border border-base-content/10 px-4 py-3">
+      <div class="flex items-center gap-2 text-sm">
+        <i class="ri-qq-line text-base-content/70" aria-hidden="true" />
+        QQ 群
+      </div>
+      <span class="font-mono text-sm text-base-content/80">
+        {qqGroupNumber}
+      </span>
+    </div>
+    <a
+      href={`mailto:${emailAddress}`}
+      class="btn btn-outline btn-sm w-full rounded-xl gap-2"
+      data-close-drawer="true"
+    >
+      <i class="ri-mail-send-line" aria-hidden="true" />
+      发送邮件
+    </a>
+  </div>
+</section>

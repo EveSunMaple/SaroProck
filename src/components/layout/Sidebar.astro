@@ -1,6 +1,6 @@
 ---
 import { type CollectionEntry, getCollection } from "astro:content";
-import TOC from "@components/blog/TOC.astro";
+import SidebarPanel from "./SidebarPanel";
 import type { MarkdownHeading } from "astro";
 
 export interface Props {
@@ -9,7 +9,9 @@ export interface Props {
   githubUrl: string;
   telegramUrl: string;
   headings?: MarkdownHeading[];
-  idPrefix?: string;
+  channelUrl: string;
+  qqGroupNumber: string;
+  emailAddress: string;
 }
 
 const {
@@ -18,7 +20,9 @@ const {
   twitterHandle,
   githubUrl,
   telegramUrl,
-  idPrefix: _idPrefix = "sidebar",
+  channelUrl,
+  qqGroupNumber,
+  emailAddress,
 } = Astro.props;
 
 // 动态统计数据 (无改动)
@@ -45,144 +49,20 @@ const stats = {
   words: formattedTotalWords,
 };
 
-const QQ_GROUP_NUMBER = "978990027";
-const EMAIL_ADDRESS = "evesunmaple@outlook.com";
+const contacts = {
+  qqGroup: qqGroupNumber,
+  email: emailAddress,
+};
 ---
 
-<aside class="hidden lg:block lg:col-span-1 no-print">
-  <div class="sticky top-20 space-y-4">
-    <div
-      class="bg-base-200/40 backdrop-blur-sm rounded-xl p-4 border border-base-content/5 space-y-4"
-    >
-      <div>
-        <div class="flex items-center space-x-3 mb-3">
-          <div class="avatar">
-            <div
-              class="w-10 h-10 rounded-full ring-1 ring-primary/20 ring-offset-1 ring-offset-base-100"
-            >
-              <img src="/avatar.webp" alt="Avatar" />
-            </div>
-          </div>
-          <div>
-            <h3 class="font-semibold text-sm">{author}</h3>
-            <p class="font-semibold text-base-content/70 text-xs">高三学生</p>
-          </div>
-        </div>
-        <p class="text-base-content/70 text-xs mb-3 leading-relaxed">
-          热爱技术，喜欢记录生活中的点点滴滴。
-        </p>
-        <div class="flex items-center gap-x-1">
-          <a
-            href={`https://twitter.com/${twitterHandle.replace("@", "")}`}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 Twitter"
-          >
-            <i class="ri-twitter-line text-lg"></i>
-          </a>
-          <a
-            href={githubUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 GitHub"
-          >
-            <i class="ri-github-line text-lg"></i>
-          </a>
-          <a
-            href={telegramUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            class="btn btn-ghost btn-sm btn-circle"
-            aria-label="访问我的 Telegram"
-          >
-            <i class="ri-telegram-line text-lg"></i>
-          </a>
-        </div>
-      </div>
-
-      <div class="divider my-2"></div>
-
-      <div>
-        <h4 class="text-xs font-semibold uppercase text-base-content/70 mb-2">
-          我的频道
-        </h4>
-        <a
-          href="https://t.me/saroprock"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="flex items-center justify-between bg-base-100 rounded-lg p-3 border border-base-content/10 transition hover:border-primary/60 hover:bg-base-100/80"
-        >
-          <span class="flex items-center gap-2 text-sm">
-            <i class="ri-telegram-fill text-base-content/70"></i>
-            <span class="font-mono text-base-content/80">t.me/saroprock</span>
-          </span>
-          <i class="ri-external-link-line text-base-content/60" aria-hidden="true"></i>
-        </a>
-      </div>
-    </div>
-
-    {
-      headings && headings.length > 0 ? (
-        <TOC headings={headings} />
-      ) : (
-        <>
-          <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-5 border border-base-content/5">
-            <h3 class="font-semibold text-base mb-5 flex items-center">
-              <i class="ri-bar-chart-fill text-primary mr-2" />
-              站点统计
-            </h3>
-            <div class="space-y-5">
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-article-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.articles}
-                  </p>
-                  <p class="text-sm text-base-content/70">篇文章</p>
-                </div>
-              </div>
-              <div class="flex items-center gap-4">
-                <div class="w-12 text-center">
-                  <i class="ri-file-word-2-line text-4xl text-primary/70" />
-                </div>
-                <div>
-                  <p class="text-2xl font-semibold leading-tight">
-                    {stats.words}
-                  </p>
-                  <p class="text-sm text-base-content/70">总字数</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div class="bg-base-200/40 backdrop-blur-sm rounded-xl p-4 border border-base-content/5">
-            <h3 class="font-semibold text-base mb-5 flex items-center">
-              <i class="ri-contacts-book-line text-primary mr-2" />
-              联系方式
-            </h3>
-            <div class="space-y-2">
-              <div class="flex items-center justify-between bg-base-100 rounded-lg p-3 border border-base-content/10">
-                <span class="flex items-center gap-2 text-sm">
-                  <i class="ri-qq-line" /> QQ 群
-                </span>
-                <span class="font-mono text-sm text-base-content/80">
-                  {QQ_GROUP_NUMBER}
-                </span>
-              </div>
-              <a
-                href={`mailto:${EMAIL_ADDRESS}`}
-                class="btn w-full bg-base-100 rounded-lg p-3 border border-base-content/10"
-              >
-                <i class="ri-mail-send-line" />
-                发送邮件
-              </a>
-            </div>
-          </div>
-        </>
-      )
-    }
-  </div>
-</aside>
+<SidebarPanel
+  client:load
+  headings={headings}
+  author={author}
+  twitterHandle={twitterHandle}
+  githubUrl={githubUrl}
+  telegramUrl={telegramUrl}
+  channelUrl={channelUrl}
+  stats={stats}
+  contacts={contacts}
+/>
