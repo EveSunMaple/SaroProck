@@ -279,16 +279,14 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
           <slot />
         </main>
 
-        <div class="hidden lg:block lg:col-span-1">
-          <Sidebar
-            idPrefix="desktop-sidebar"
-            headings={headings}
-            author={SITE_AUTHOR}
-            twitterHandle={TWITTER_HANDLE}
-            githubUrl={GITHUB_URL}
-            telegramUrl={TELEGRAM_URL}
-          />
-        </div>
+        <Sidebar
+          idPrefix="desktop-sidebar"
+          headings={headings}
+          author={SITE_AUTHOR}
+          twitterHandle={TWITTER_HANDLE}
+          githubUrl={GITHUB_URL}
+          telegramUrl={TELEGRAM_URL}
+        />
       </div>
     </div>
 
