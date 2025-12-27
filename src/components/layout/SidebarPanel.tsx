@@ -87,7 +87,6 @@ export default function SidebarPanel({
               </header>
 
               <div className="relative">
-                <div className="absolute left-4 top-0 bottom-0 w-px bg-base-content/10 pointer-events-none" />
                 {hasHydratedHeadings ? (
                   <TocList
                     headings={normalizedHeadings}
@@ -303,7 +302,7 @@ function StatCard({
 function TocList({ headings, activeSlug, onNavigate, size }: TocListProps) {
   return (
     <nav aria-label="文章目录">
-      <ol className="space-y-1 pl-2">
+      <ol className="space-y-1 pl-2 max-h-[calc(100vh-500px)] overflow-y-auto scrollbar-none">
         {headings.map((heading) => {
           const isActive = heading.slug === activeSlug;
           const depth = Math.min(heading.depth, 4);
@@ -315,7 +314,7 @@ function TocList({ headings, activeSlug, onNavigate, size }: TocListProps) {
                 type="button"
                 onClick={() => onNavigate(heading.slug)}
                 className={[
-                  "relative w-full text-left rounded-xl px-3 py-2 transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40",
+                  "relative flex items-center py-2 px-2 rounded-lg w-full transition-colors cursor-pointer",
                   isActive
                     ? "bg-primary/10 text-primary font-medium shadow-sm"
                     : "text-base-content/70 hover:text-base-content hover:bg-base-100/60",
@@ -398,7 +397,7 @@ function MobileTocFab({
     <>
       <button
         type="button"
-        className="lg:hidden fixed bottom-20 right-5 z-40 w-12 h-12 rounded-full bg-base-100 border border-base-content/10 shadow-lg flex items-center justify-center text-primary transition hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/60"
+        className="lg:hidden fixed right-6 bottom-20 md:right-8 w-12 h-12 bg-primary text-primary-content rounded-full shadow-lg transition-all duration-300 hover:scale-110 hover:shadow-xl z-50 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 no-print"
         aria-label="打开目录"
         aria-expanded={isOpen}
         onClick={() => setIsOpen(true)}

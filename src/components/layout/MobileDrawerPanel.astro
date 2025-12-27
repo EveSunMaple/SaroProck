@@ -22,19 +22,24 @@ const {
 
 <section class="space-y-5">
   <div class="bg-base-200/50 border border-base-content/10 rounded-2xl p-4 backdrop-blur-sm shadow-sm">
-    <div class="flex items-center gap-3 mb-3">
-      <div class="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-secondary text-primary-content flex items-center justify-center text-xl font-semibold">
-        <span>猫</span>
+    <div class="flex items-center gap-3 mb-4">
+        <div class="avatar">
+          <div class="w-12 h-12 rounded-2xl ring-1 ring-primary/30 ring-offset-2 ring-offset-base-100 overflow-hidden">
+            <img
+              src="/avatar.webp"
+              alt={`${author} avatar`}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+        <div>
+          <p class="text-sm uppercase tracking-wider text-base-content/50">
+            Author
+          </p>
+          <h3 class="font-semibold text-base-content">{author}</h3>
+          <p class="text-xs text-base-content/60">高三学生 · 技术手作</p>
+        </div>
       </div>
-      <div>
-        <p class="text-xs uppercase tracking-wide text-base-content/60">Author</p>
-        <p class="text-base-content font-semibold">{author}</p>
-        <p class="text-xs text-base-content/60">记录、写作、构建</p>
-      </div>
-    </div>
-    <p class="text-sm text-base-content/70 leading-relaxed">
-      分享技术与生活的灵感碎片，欢迎随时来聊。
-    </p>
     <div class="flex gap-2 mt-3">
       <a
         href={`https://twitter.com/${twitterHandle.replace("@", "")}`}

@@ -7,8 +7,8 @@ import "remixicon/fonts/remixicon.css";
 import Footer from "@components/layout/Footer.astro";
 import Header from "@components/layout/Header.astro";
 import Hero from "@components/layout/Hero.astro";
-import Sidebar from "@components/layout/Sidebar.astro";
 import MobileDrawerPanel from "@components/layout/MobileDrawerPanel.astro";
+import Sidebar from "@components/layout/Sidebar.astro";
 import BackToTop from "@components/widgets/BackToTop.astro";
 import type { MarkdownHeading } from "astro";
 
@@ -198,7 +198,7 @@ const breadcrumbs = providedBreadcrumbs ?? buildDefaultBreadcrumbs();
         </div>
         <button
           type="button"
-          class="flex-1 h-full bg-black/10 hover:bg-black/20 transition-colors duration-200"
+          class="flex-1 h-full transition-colors duration-200"
           data-close-drawer="true"
           aria-label="点击关闭导航"
         >
