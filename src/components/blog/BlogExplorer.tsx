@@ -188,7 +188,7 @@ const BlogExplorer: React.FC<Props> = ({ posts }) => {
         <header className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
             <h1 className="text-2xl font-semibold flex items-center gap-3">
-              <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-gradient-to-br from-primary/80 to-secondary/80 text-primary-content shadow-md">
+              <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-linear-to-br from-primary/80 to-secondary/80 text-primary-content shadow-md">
                 <i className="ri-article-line text-lg" aria-hidden="true" />
               </span>
               博客总览

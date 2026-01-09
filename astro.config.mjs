@@ -5,9 +5,9 @@ import vercel from "@astrojs/vercel";
 import compress from "@playform/compress";
 import terser from "@rollup/plugin-terser";
 import tailwindcss from "@tailwindcss/vite";
+import { defineConfig } from "astro/config";
 import expressiveCode from "astro-expressive-code";
 import icon from "astro-icon";
-import { defineConfig } from "astro/config";
 import rehypeKatex from "rehype-katex";
 
 import remarkMath from "remark-math";
@@ -21,7 +21,15 @@ export default defineConfig({
     plugins: [tailwindcss()],
   },
 
-  integrations: [expressiveCode(), mdx(), react(), sitemap(), compress(), terser({ compress: true, mangle: true }), icon()],
+  integrations: [
+    expressiveCode(),
+    mdx(),
+    react(),
+    sitemap(),
+    compress(),
+    terser({ compress: true, mangle: true }),
+    icon(),
+  ],
   markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [rehypeKatex],

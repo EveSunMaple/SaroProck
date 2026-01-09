@@ -22,9 +22,11 @@ const isNewerDisabled = !afterCursor || !showAfter;
       { "btn-disabled": isNewerDisabled },
     ]}
     aria-disabled={isNewerDisabled}
+    aria-label={isNewerDisabled ? "暂无更新的动态" : "查看更多更新的动态"}
   >
-    <i class="ri-arrow-left-line"></i>
+    <i class="ri-arrow-left-line" aria-hidden="true"></i>
     <span class="hidden sm:inline">更新的动态</span>
+    <span class="sr-only sm:hidden">更新的动态</span>
   </a>
 
   <a
@@ -34,8 +36,10 @@ const isNewerDisabled = !afterCursor || !showAfter;
       { "btn-disabled": isOlderDisabled },
     ]}
     aria-disabled={isOlderDisabled}
+    aria-label={isOlderDisabled ? "暂无更早的动态" : "查看更多更早的动态"}
   >
     <span class="hidden sm:inline">更早的动态</span>
-    <i class="ri-arrow-right-line"></i>
+    <span class="sr-only sm:hidden">更早的动态</span>
+    <i class="ri-arrow-right-line" aria-hidden="true"></i>
   </a>
 </nav>

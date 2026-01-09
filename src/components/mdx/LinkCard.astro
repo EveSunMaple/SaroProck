@@ -36,7 +36,7 @@ import { Icon } from "astro-icon/components";
     rel={target === "_blank" ? "noopener noreferrer" : undefined}
   >
     <div class="flex flex-col md:flex-row gap-4 items-center">
-      <div class="w-full md:w-[120px] h-[120px] flex-shrink-0 bg-base-200 rounded-lg overflow-hidden">
+      <div class="w-full md:w-30 h-30 shrink-0 bg-base-200 rounded-lg overflow-hidden">
         {
           img ? (
             <Image
@@ -49,7 +49,7 @@ import { Icon } from "astro-icon/components";
               class="w-full h-full object-cover"
             />
           ) : (
-            <div class="flex items-center justify-center w-full h-full bg-gradient-to-br from-base-300 to-base-100">
+            <div class="flex items-center justify-center w-full h-full bg-linear-to-br from-base-300 to-base-100">
               <Icon name={icon} class="w-8 h-8 text-primary opacity-80" aria-hidden="true" />
             </div>
           )

@@ -93,11 +93,16 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
   };
 
   const buttonClasses = `btn btn-ghost btn-xs rounded-lg gap-1 text-base-content/60 ${hasLiked ? "text-error" : ""}`;
+  const accessibleLabel = hasLiked ? "取消点赞这条动态" : "点赞这条动态";
   const isDisabled = isLoading || isSubmitting;
 
   if (isLoading) {
     return (
-      <button type="button" className={buttonClasses}>
+      <button
+        type="button"
+        className={buttonClasses}
+        aria-label="正在加载点赞状态"
+      >
         <span className="loading loading-spinner loading-xs" />
       </button>
     );
@@ -109,6 +114,7 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
       className={buttonClasses}
       onClick={handleClick}
       disabled={isDisabled}
+      aria-label={accessibleLabel}
     >
       {isSubmitting ? (
         <span className="loading loading-spinner loading-xs" />

@@ -22,10 +22,11 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
           class="flex items-center space-x-2 group"
           aria-controls={mobileDrawerId}
           aria-haspopup="dialog"
+          aria-label={`${siteTitle}，打开导航`}
           onclick={`if (window.matchMedia('(min-width: 1024px)').matches) return; event.preventDefault(); document.getElementById('${mobileDrawerId}')?.showModal?.();`}
         >
           <div
-            class="w-7 h-7 bg-gradient-to-br from-primary to-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
+            class="w-7 h-7 bg-linear-to-br from-primary to-secondary rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300"
           >
             <i class="ri-leaf-line text-primary-content text-sm"></i>
           </div>

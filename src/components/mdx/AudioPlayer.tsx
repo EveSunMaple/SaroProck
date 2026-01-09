@@ -248,7 +248,7 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, captionsSrc }) => {
                     ${
                       index === currentLineIndex
                         ? "text-primary font-bold scale-110"
-                        : "text-base-content/80 hover:text-base-content/100"
+                        : "text-base-content/80 hover:text-base-content"
                     }`}
                 >
                   {line.text}
@@ -263,14 +263,14 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, captionsSrc }) => {
           <div className="h-1/2 min-h-1/2 pb-4" />
         </div>
 
-        <div className="absolute top-0 left-0 w-full h-1/4 bg-gradient-to-b from-base-100 to-transparent pointer-events-none" />
+        <div className="absolute top-0 left-0 w-full h-1/4 bg-linear-to-b from-base-100 to-transparent pointer-events-none" />
 
-        <div className="absolute bottom-0 left-0 w-full h-1/4 bg-gradient-to-t from-base-100 to-transparent pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-full h-1/4 bg-linear-to-t from-base-100 to-transparent pointer-events-none" />
       </div>
       <div className="flex items-center gap-3 px-4 py-2 bg-base-200 rounded-full shadow-xl">
         <button
           type="button"
-          className="btn btn-primary btn-circle flex-shrink-0 w-10 h-10 min-h-10"
+          className="btn btn-primary btn-circle shrink-0 w-10 h-10 min-h-10"
           onClick={togglePlayPause}
           aria-label={isPlaying ? "Pause" : "Play"}
           disabled={!duration}
