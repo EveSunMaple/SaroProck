@@ -31,7 +31,7 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
             <i class="ri-leaf-line text-primary-content text-sm"></i>
           </div>
           <span
-            class="text-lg font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent hidden md:block"
+            class="text-lg font-bold bg-linear-to-r from-primary to-secondary bg-clip-text text-transparent hidden md:block"
           >
             {siteTitle}
           </span>
@@ -60,7 +60,7 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
               >
                 <span>{link.label}</span>
                 {isActive && (
-                  <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-gradient-to-r from-primary to-secondary rounded-full"></span>
+                  <span class="absolute -bottom-1 left-0 w-full h-0.5 bg-linear-to-r from-primary to-secondary rounded-full"></span>
                 )}
               </a>
             );
