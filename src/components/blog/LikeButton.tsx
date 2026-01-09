@@ -1,4 +1,3 @@
-import confetti from "canvas-confetti";
 // src/components/blog/LikeButton.tsx
 import type React from "react";
 import { useEffect, useRef, useState } from "react";
@@ -69,12 +68,16 @@ const BlogLikeButton: React.FC<Props> = ({ postId }) => {
         const rect = buttonRef.current.getBoundingClientRect();
         const x = (rect.left + rect.right) / 2 / window.innerWidth;
         const y = (rect.top + rect.bottom) / 2 / window.innerHeight;
-        confetti({
-          particleCount: 100,
-          spread: 70,
-          origin: { x, y },
-          colors: ["#fb7185", "#fda4af", "#ffedd5"],
-        });
+        const runConfetti = async () => {
+          const { default: confetti } = await import("canvas-confetti");
+          confetti({
+            particleCount: 100,
+            spread: 70,
+            origin: { x, y },
+            colors: ["#fb7185", "#fda4af", "#ffedd5"],
+          });
+        };
+        void runConfetti();
       }
     }
 

@@ -55,14 +55,139 @@ const contacts = {
 };
 ---
 
-<SidebarPanel
-  client:load
-  headings={headings}
-  author={author}
-  twitterHandle={twitterHandle}
-  githubUrl={githubUrl}
-  telegramUrl={telegramUrl}
-  channelUrl={channelUrl}
-  stats={stats}
-  contacts={contacts}
-/>
+<aside class="lg:col-span-1 no-print">
+  <div class="sticky top-18 space-y-4">
+    <section class="hidden lg:block bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
+      <div class="flex items-center gap-3 mb-4">
+        <div class="avatar">
+          <div class="w-12 h-12 rounded-2xl ring-1 ring-primary/30 ring-offset-2 ring-offset-base-100 overflow-hidden">
+            <img
+              src="/avatar.webp"
+              alt={`${author} avatar`}
+              class="w-full h-full object-cover"
+            />
+          </div>
+        </div>
+        <div>
+          <p class="text-sm uppercase tracking-wider text-base-content/50">Author</p>
+          <h3 class="font-semibold text-base-content">{author}</h3>
+          <p class="text-xs text-base-content/60">高三学生 · 技术手作</p>
+        </div>
+      </div>
+
+      <p class="text-sm text-base-content/70 leading-relaxed mb-4">
+        如果可以，请送我一张书签
+      </p>
+
+      <div class="flex items-center gap-2">
+        <a
+          href={`https://twitter.com/${twitterHandle.replace("@", "")}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-ghost btn-sm btn-circle"
+          aria-label="Twitter"
+        >
+          <i class="ri-twitter-line text-lg" aria-hidden="true"></i>
+        </a>
+        <a
+          href={githubUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-ghost btn-sm btn-circle"
+          aria-label="GitHub"
+        >
+          <i class="ri-github-line text-lg" aria-hidden="true"></i>
+        </a>
+        <a
+          href={telegramUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          class="btn btn-ghost btn-sm btn-circle"
+          aria-label="Telegram"
+        >
+          <i class="ri-telegram-line text-lg" aria-hidden="true"></i>
+        </a>
+      </div>
+    </section>
+
+    <a
+      href={channelUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      class="hidden lg:flex mt-4 items-center justify-between rounded-2xl border border-base-content/10 bg-base-100 px-4 py-3 transition hover:border-primary/60 hover:bg-base-100/80"
+    >
+      <span class="flex items-center gap-2 text-sm font-medium">
+        <i class="ri-telegram-fill text-primary" aria-hidden="true"></i>
+        <span class="font-mono text-base-content/80">
+          {channelUrl.replace(/^https?:\/\//, "")}
+        </span>
+      </span>
+      <i class="ri-external-link-line text-base-content/60" aria-hidden="true"></i>
+    </a>
+
+    <section class="hidden lg:block bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
+      <header class="flex items-center gap-2 mb-5">
+        <i class="ri-bar-chart-2-line text-primary text-2xl" aria-hidden="true"></i>
+        <div>
+          <p class="text-sm font-semibold">站点统计</p>
+          <p class="text-xs text-base-content/60">每一次记录都算数</p>
+        </div>
+      </header>
+      <div class="grid grid-cols-1 gap-4">
+        <div class="bg-base-100/80 rounded-2xl border border-base-content/5 p-4">
+          <div class="flex items-center gap-3">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <i class="ri-article-line text-xl" aria-hidden="true"></i>
+            </span>
+            <div>
+              <p class="text-2xl font-semibold leading-none">{stats.articles}</p>
+              <p class="text-sm text-base-content/60 mt-1">篇文章</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-base-100/80 rounded-2xl border border-base-content/5 p-4">
+          <div class="flex items-center gap-3">
+            <span class="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <i class="ri-file-word-2-line text-xl" aria-hidden="true"></i>
+            </span>
+            <div>
+              <p class="text-2xl font-semibold leading-none">{stats.words}</p>
+              <p class="text-sm text-base-content/60 mt-1">总字数</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="hidden lg:block bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
+      <header class="flex items-center gap-2 mb-4">
+        <i class="ri-contacts-book-2-line text-primary text-2xl" aria-hidden="true"></i>
+        <div>
+          <p class="text-sm font-semibold">保持联系</p>
+          <p class="text-xs text-base-content/60">期待与你聊聊</p>
+        </div>
+      </header>
+
+      <div class="space-y-3">
+        <div class="flex items-center justify-between bg-base-100 rounded-xl border border-base-content/10 px-4 py-3">
+          <div class="flex items-center gap-2 text-sm">
+            <i class="ri-qq-line text-base-content/70" aria-hidden="true"></i>
+            QQ 群
+          </div>
+          <span class="font-mono text-sm text-base-content/80">{contacts.qqGroup}</span>
+        </div>
+        <a
+          href={`mailto:${contacts.email}`}
+          class="btn btn-outline btn-primary w-full rounded-xl gap-2"
+        >
+          <i class="ri-mail-send-line" aria-hidden="true"></i>
+          给我写信
+        </a>
+      </div>
+    </section>
+
+    {headings && headings.length > 0 && (
+      <SidebarPanel client:idle headings={headings} />
+    )}
+  </div>
+</aside>

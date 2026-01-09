@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type BlogPostMeta = {
   slug: string;
@@ -13,8 +13,14 @@ type BlogPostMeta = {
   coverImage?: string | null;
 };
 
+type FilterOptions = {
+  categories: string[];
+  tags: string[];
+};
+
 type Props = {
   posts: BlogPostMeta[];
+  filterOptions?: FilterOptions;
 };
 
 type PageItem = number | "ellipsis-start" | "ellipsis-end";
@@ -47,7 +53,7 @@ const getPageItems = (current: number, total: number): PageItem[] => {
   return pages;
 };
 
-const BlogExplorer: React.FC<Props> = ({ posts }) => {
+const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [selectedTags, setSelectedTags] = useState<string[]>([]);
   const [itemsPerPage, setItemsPerPage] = useState<number>(
@@ -57,9 +63,12 @@ const BlogExplorer: React.FC<Props> = ({ posts }) => {
   const [isFilterModalOpen, setFilterModalOpen] = useState(false);
   const [draftCategory, setDraftCategory] = useState<string | null>(null);
   const [draftTags, setDraftTags] = useState<string[]>([]);
-  const filterDialogRef = useRef<HTMLDialogElement | null>(null);
 
   const { categories, tags } = useMemo(() => {
+    if (filterOptions) {
+      return filterOptions;
+    }
+
     const categorySet = new Set<string>();
     const tagSet = new Set<string>();
 
@@ -78,7 +87,7 @@ const BlogExplorer: React.FC<Props> = ({ posts }) => {
       ),
       tags: Array.from(tagSet).sort((a, b) => a.localeCompare(b, "zh-CN")),
     };
-  }, [posts]);
+  }, [filterOptions, posts]);
 
   const filtered = useMemo(() => {
     return posts.filter((post) => {
@@ -104,19 +113,6 @@ const BlogExplorer: React.FC<Props> = ({ posts }) => {
     const start = (currentPage - 1) * itemsPerPage;
     return filtered.slice(start, start + itemsPerPage);
   }, [filtered, currentPage, itemsPerPage]);
-
-  useEffect(() => {
-    const dialog = filterDialogRef.current;
-    if (!dialog) return;
-
-    if (isFilterModalOpen) {
-      if (typeof dialog.showModal === "function" && !dialog.open) {
-        dialog.showModal();
-      }
-    } else if (dialog.open) {
-      dialog.close();
-    }
-  }, [isFilterModalOpen]);
 
   const applyFilters = (category: string | null, tags: string[]) => {
     setSelectedCategory(category);
@@ -294,134 +290,137 @@ const BlogExplorer: React.FC<Props> = ({ posts }) => {
         </div>
       </section>
 
-      <dialog
-        ref={filterDialogRef}
-        className="modal modal-bottom sm:modal-middle"
-        onCancel={() => setFilterModalOpen(false)}
-        onClose={() => setFilterModalOpen(false)}
-      >
-        <div className="modal-box w-full max-w-2xl rounded-t-2xl sm:rounded-2xl">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-lg font-semibold flex items-center gap-2">
-              <i
-                className="ri-equalizer-line text-primary"
-                aria-hidden="true"
-              />
-              筛选文章
-            </h2>
-            <button
-              type="button"
-              className="btn btn-sm btn-circle btn-ghost"
-              onClick={closeFilterModal}
-              aria-label="关闭筛选"
-            >
-              ✕
-            </button>
-          </div>
-
-          <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
-            <section>
-              <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
-                <i className="ri-stack-line" aria-hidden="true" /> 分类
-              </h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  onClick={() => handleDraftCategoryToggle(null)}
-                  className={`btn btn-xs rounded-full border transition-all ${
-                    draftCategory === null
-                      ? "btn-primary"
-                      : "btn-ghost border-base-content/10 hover:border-primary/40"
-                  }`}
-                >
-                  全部
-                </button>
-                {categories.map((category) => {
-                  const isActive = draftCategory === category;
-                  return (
-                    <button
-                      key={category}
-                      type="button"
-                      onClick={() => handleDraftCategoryToggle(category)}
-                      className={`btn btn-xs rounded-full border transition-all ${
-                        isActive
-                          ? "btn-primary"
-                          : "btn-ghost border-base-content/10 hover:border-primary/40"
-                      }`}
-                    >
-                      {category}
-                    </button>
-                  );
-                })}
-              </div>
-            </section>
-
-            <section>
-              <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
-                <i className="ri-price-tag-3-line" aria-hidden="true" /> 标签
-              </h3>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {tags.length === 0 ? (
-                  <span className="text-sm text-base-content/60">暂无标签</span>
-                ) : (
-                  tags.map((tag) => {
-                    const isActive = draftTags.includes(tag);
-                    return (
-                      <button
-                        key={tag}
-                        type="button"
-                        onClick={() => handleDraftTagToggle(tag)}
-                        className={`badge badge-lg border transition-all cursor-pointer select-none ${
-                          isActive
-                            ? "badge-primary text-primary-content"
-                            : "badge-outline border-base-content/20 hover:border-primary/50 hover:text-primary"
-                        }`}
-                      >
-                        #{tag}
-                      </button>
-                    );
-                  })
-                )}
-              </div>
-            </section>
-          </div>
-
-          <div className="modal-action mt-6">
-            <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+      {isFilterModalOpen && (
+        <dialog
+          className="modal modal-bottom sm:modal-middle"
+          open
+          onCancel={(event) => {
+            event.preventDefault();
+            setFilterModalOpen(false);
+          }}
+          onClose={() => setFilterModalOpen(false)}
+        >
+          <div className="modal-box w-full max-w-2xl rounded-t-2xl sm:rounded-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-lg font-semibold flex items-center gap-2">
+                <i
+                  className="ri-equalizer-line text-primary"
+                  aria-hidden="true"
+                />
+                筛选文章
+              </h2>
               <button
                 type="button"
-                className="btn btn-ghost"
-                onClick={handleModalReset}
-              >
-                重置选择
-              </button>
-              <button
-                type="button"
-                className="btn btn-ghost"
+                className="btn btn-sm btn-circle btn-ghost"
                 onClick={closeFilterModal}
+                aria-label="关闭筛选"
               >
-                取消
-              </button>
-              <button
-                type="button"
-                className="btn btn-primary"
-                onClick={handleModalApply}
-              >
-                应用筛选
+                ✕
               </button>
             </div>
+
+            <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
+              <section>
+                <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
+                  <i className="ri-stack-line" aria-hidden="true" /> 分类
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleDraftCategoryToggle(null)}
+                    className={`btn btn-xs rounded-full border transition-all ${
+                      draftCategory === null
+                        ? "btn-primary"
+                        : "btn-ghost border-base-content/10 hover:border-primary/40"
+                    }`}
+                  >
+                    全部
+                  </button>
+                  {categories.map((category) => {
+                    const isActive = draftCategory === category;
+                    return (
+                      <button
+                        key={category}
+                        type="button"
+                        onClick={() => handleDraftCategoryToggle(category)}
+                        className={`btn btn-xs rounded-full border transition-all ${
+                          isActive
+                            ? "btn-primary"
+                            : "btn-ghost border-base-content/10 hover:border-primary/40"
+                        }`}
+                      >
+                        {category}
+                      </button>
+                    );
+                  })}
+                </div>
+              </section>
+
+              <section>
+                <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
+                  <i className="ri-price-tag-3-line" aria-hidden="true" /> 标签
+                </h3>
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {tags.length === 0 ? (
+                    <span className="text-sm text-base-content/60">
+                      暂无标签
+                    </span>
+                  ) : (
+                    tags.map((tag) => {
+                      const isActive = draftTags.includes(tag);
+                      return (
+                        <button
+                          key={tag}
+                          type="button"
+                          onClick={() => handleDraftTagToggle(tag)}
+                          className={`badge badge-lg border transition-all cursor-pointer select-none ${
+                            isActive
+                              ? "badge-primary text-primary-content"
+                              : "badge-outline border-base-content/20 hover:border-primary/50 hover:text-primary"
+                          }`}
+                        >
+                          #{tag}
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+              </section>
+            </div>
+
+            <div className="modal-action mt-6">
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={handleModalReset}
+                >
+                  重置选择
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost"
+                  onClick={closeFilterModal}
+                >
+                  取消
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-primary"
+                  onClick={handleModalApply}
+                >
+                  应用筛选
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-        <form
-          method="dialog"
-          className="modal-backdrop"
-          onSubmit={() => setFilterModalOpen(false)}
-        >
-          <button type="submit" aria-label="关闭">
-            关闭
-          </button>
-        </form>
-      </dialog>
+          <form method="dialog" className="modal-backdrop">
+            <button type="submit" onClick={closeFilterModal}>
+              close
+            </button>
+          </form>
+        </dialog>
+      )}
 
       <section className="space-y-6">
         {currentItems.length === 0 ? (

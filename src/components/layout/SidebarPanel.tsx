@@ -5,19 +5,6 @@ type Heading = Pick<MarkdownHeading, "slug" | "text" | "depth">;
 
 interface SidebarPanelProps {
   headings?: Heading[];
-  author: string;
-  twitterHandle: string;
-  githubUrl: string;
-  telegramUrl: string;
-  channelUrl: string;
-  stats: {
-    articles: number;
-    words: string | number;
-  };
-  contacts: {
-    qqGroup: string;
-    email: string;
-  };
 }
 
 interface TocListProps {
@@ -37,75 +24,49 @@ const HEADER_OFFSET = 88;
 const SELECTOR =
   "article h1, article h2, article h3, article h4, article h5, article h6";
 
-export default function SidebarPanel({
-  headings = [],
-  author,
-  twitterHandle,
-  githubUrl,
-  telegramUrl,
-  channelUrl,
-  stats,
-  contacts,
-}: SidebarPanelProps) {
+export default function SidebarPanel({ headings = [] }: SidebarPanelProps) {
   const { normalizedHeadings, activeSlug, scrollToSlug, hasHydratedHeadings } =
     useDynamicToc(headings);
+
   const hasHeadings = normalizedHeadings.length > 0;
+
+  if (!hasHeadings) {
+    return null;
+  }
 
   return (
     <>
-      <aside className="hidden lg:block lg:col-span-1 no-print">
-        <div className="sticky top-18 space-y-4">
-          <ProfileCard
-            author={author}
-            twitterHandle={twitterHandle}
-            githubUrl={githubUrl}
-            telegramUrl={telegramUrl}
-          />
+      <section className="hidden lg:block bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
+        <header className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-2">
+            <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+              <i className="ri-compass-3-line text-lg" aria-hidden="true" />
+            </span>
+            <div>
+              <p className="font-semibold text-base">阅读导览</p>
+              <p className="text-xs text-base-content/60">动态追踪当前章节</p>
+            </div>
+          </div>
+          <span className="text-xs font-mono text-base-content/50">
+            {normalizedHeadings.length} 条
+          </span>
+        </header>
 
-          <ChannelCard channelUrl={channelUrl} />
-
-          {hasHeadings ? (
-            <section className="bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
-              <header className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-                    <i
-                      className="ri-compass-3-line text-lg"
-                      aria-hidden="true"
-                    />
-                  </span>
-                  <div>
-                    <p className="font-semibold text-base">阅读导览</p>
-                    <p className="text-xs text-base-content/60">
-                      动态追踪当前章节
-                    </p>
-                  </div>
-                </div>
-                <span className="text-xs font-mono text-base-content/50">
-                  {normalizedHeadings.length} 条
-                </span>
-              </header>
-
-              <div className="relative">
-                {hasHydratedHeadings ? (
-                  <TocList
-                    headings={normalizedHeadings}
-                    activeSlug={activeSlug}
-                    onNavigate={scrollToSlug}
-                    size="desktop"
-                  />
-                ) : (
-                  <SkeletonLines />
-                )}
-              </div>
-            </section>
+        <div className="relative">
+          {hasHydratedHeadings ? (
+            <TocList
+              headings={normalizedHeadings}
+              activeSlug={activeSlug}
+              onNavigate={scrollToSlug}
+              size="desktop"
+            />
           ) : (
-            <EmptyState stats={stats} contacts={contacts} />
+            <SkeletonLines />
           )}
         </div>
-      </aside>
+      </section>
 
-      {hasHeadings && hasHydratedHeadings && (
+      {hasHydratedHeadings && (
         <MobileTocFab
           headings={normalizedHeadings}
           activeSlug={activeSlug}
@@ -113,189 +74,6 @@ export default function SidebarPanel({
         />
       )}
     </>
-  );
-}
-
-function ProfileCard({
-  author,
-  twitterHandle,
-  githubUrl,
-  telegramUrl,
-}: Pick<
-  SidebarPanelProps,
-  "author" | "twitterHandle" | "githubUrl" | "telegramUrl"
->) {
-  return (
-    <section className="bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
-      <div className="flex items-center gap-3 mb-4">
-        <div className="avatar">
-          <div className="w-12 h-12 rounded-2xl ring-1 ring-primary/30 ring-offset-2 ring-offset-base-100 overflow-hidden">
-            <img
-              src="/avatar.webp"
-              alt={`${author} avatar`}
-              className="w-full h-full object-cover"
-            />
-          </div>
-        </div>
-        <div>
-          <p className="text-sm uppercase tracking-wider text-base-content/50">
-            Author
-          </p>
-          <h3 className="font-semibold text-base-content">{author}</h3>
-          <p className="text-xs text-base-content/60">高三学生 · 技术手作</p>
-        </div>
-      </div>
-
-      <p className="text-sm text-base-content/70 leading-relaxed mb-4">
-        如果可以，请送我一张书签
-      </p>
-
-      <div className="flex items-center gap-2">
-        <IconButton
-          href={`https://twitter.com/${twitterHandle.replace("@", "")}`}
-          label="Twitter"
-          icon="ri-twitter-line"
-        />
-        <IconButton href={githubUrl} label="GitHub" icon="ri-github-line" />
-        <IconButton
-          href={telegramUrl}
-          label="Telegram"
-          icon="ri-telegram-line"
-        />
-      </div>
-    </section>
-  );
-}
-
-function ChannelCard({ channelUrl }: { channelUrl: string }) {
-  return (
-    <a
-      href={channelUrl}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="mt-4 flex items-center justify-between rounded-2xl border border-base-content/10 bg-base-100 px-4 py-3 transition hover:border-primary/60 hover:bg-base-100/80"
-    >
-      <span className="flex items-center gap-2 text-sm font-medium">
-        <i className="ri-telegram-fill text-primary" aria-hidden />
-        <span className="font-mono text-base-content/80">
-          {channelUrl.replace(/^https?:\/\//, "")}
-        </span>
-      </span>
-      <i className="ri-external-link-line text-base-content/60" aria-hidden />
-    </a>
-  );
-}
-
-function IconButton({
-  href,
-  label,
-  icon,
-}: {
-  href: string;
-  label: string;
-  icon: string;
-}) {
-  return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="btn btn-ghost btn-sm btn-circle"
-      aria-label={label}
-    >
-      <i className={`${icon} text-lg`} aria-hidden="true" />
-      <span className="sr-only">{label}</span>
-    </a>
-  );
-}
-
-function EmptyState({
-  stats,
-  contacts,
-}: Pick<SidebarPanelProps, "stats" | "contacts">) {
-  return (
-    <div className="space-y-4">
-      <section className="bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
-        <header className="flex items-center gap-2 mb-5">
-          <i
-            className="ri-bar-chart-2-line text-primary text-2xl"
-            aria-hidden
-          />
-          <div>
-            <p className="text-sm font-semibold">站点统计</p>
-            <p className="text-xs text-base-content/60">每一次记录都算数</p>
-          </div>
-        </header>
-        <div className="grid grid-cols-1 gap-4">
-          <StatCard
-            label="篇文章"
-            value={stats.articles}
-            icon="ri-article-line"
-          />
-          <StatCard
-            label="总字数"
-            value={stats.words}
-            icon="ri-file-word-2-line"
-          />
-        </div>
-      </section>
-
-      <section className="bg-base-200/40 backdrop-blur-sm rounded-2xl border border-base-content/5 p-5 shadow-sm">
-        <header className="flex items-center gap-2 mb-4">
-          <i
-            className="ri-contacts-book-2-line text-primary text-2xl"
-            aria-hidden
-          />
-          <div>
-            <p className="text-sm font-semibold">保持联系</p>
-            <p className="text-xs text-base-content/60">期待与你聊聊</p>
-          </div>
-        </header>
-
-        <div className="space-y-3">
-          <div className="flex items-center justify-between bg-base-100 rounded-xl border border-base-content/10 px-4 py-3">
-            <div className="flex items-center gap-2 text-sm">
-              <i className="ri-qq-line text-base-content/70" aria-hidden />
-              QQ 群
-            </div>
-            <span className="font-mono text-sm text-base-content/80">
-              {contacts.qqGroup}
-            </span>
-          </div>
-          <a
-            href={`mailto:${contacts.email}`}
-            className="btn btn-outline btn-primary w-full rounded-xl gap-2"
-          >
-            <i className="ri-mail-send-line" aria-hidden />
-            给我写信
-          </a>
-        </div>
-      </section>
-    </div>
-  );
-}
-
-function StatCard({
-  label,
-  value,
-  icon,
-}: {
-  label: string;
-  value: string | number;
-  icon: string;
-}) {
-  return (
-    <div className="bg-base-100/80 rounded-2xl border border-base-content/5 p-4">
-      <div className="flex items-center gap-3">
-        <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary">
-          <i className={`${icon} text-xl`} aria-hidden />
-        </span>
-        <div>
-          <p className="text-2xl font-semibold leading-none">{value}</p>
-          <p className="text-sm text-base-content/60 mt-1">{label}</p>
-        </div>
-      </div>
-    </div>
   );
 }
 

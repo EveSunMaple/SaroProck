@@ -67,11 +67,11 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
           })}
         </nav>
 
-        <SearchBar client:load />
+        <SearchBar client:idle />
       </div>
 
       <div class="flex items-center gap-2 lg:hidden">
-        <SearchBar client:load />
+        <SearchBar client:idle />
       </div>
     </div>
   </div>

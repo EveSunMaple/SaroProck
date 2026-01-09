@@ -91,6 +91,8 @@ const SearchBar: React.FC = () => {
   };
 
   useEffect(() => {
+    if (!isExpanded && !showDropdown) return;
+
     const handleClickOutside = (event: MouseEvent) => {
       const target = event.target as Node | null;
       if (target && !containerRef.current?.contains(target)) {
@@ -103,9 +105,11 @@ const SearchBar: React.FC = () => {
     return () => {
       document.removeEventListener("click", handleClickOutside);
     };
-  }, [collapseIfEmpty]);
+  }, [collapseIfEmpty, isExpanded, showDropdown]);
 
   useEffect(() => {
+    if (!isExpanded && !showDropdown) return;
+
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setShowDropdown(false);
@@ -118,12 +122,14 @@ const SearchBar: React.FC = () => {
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [collapseIfEmpty]);
+  }, [collapseIfEmpty, isExpanded, showDropdown]);
 
   useEffect(() => {
     if (!isExpanded || metadataLoaded) return;
 
     let isActive = true;
+    let idleHandle: number | null = null;
+    let timeoutHandle: number | null = null;
 
     const loadMetadata = async () => {
       try {
@@ -146,10 +152,46 @@ const SearchBar: React.FC = () => {
       }
     };
 
-    void loadMetadata();
+    const hasWindow = typeof window !== "undefined";
+
+    if (hasWindow && "requestIdleCallback" in window) {
+      const runtimeWindow = window as typeof window & {
+        requestIdleCallback: (
+          callback: IdleRequestCallback,
+          options?: IdleRequestOptions,
+        ) => number;
+        cancelIdleCallback: (handle: number) => void;
+      };
+
+      idleHandle = runtimeWindow.requestIdleCallback(
+        () => {
+          void loadMetadata();
+        },
+        { timeout: 800 },
+      );
+    } else if (hasWindow) {
+      timeoutHandle = window.setTimeout(() => {
+        void loadMetadata();
+      }, 200);
+    }
 
     return () => {
       isActive = false;
+      if (
+        idleHandle !== null &&
+        typeof window !== "undefined" &&
+        "cancelIdleCallback" in window
+      ) {
+        (
+          window as typeof window & {
+            cancelIdleCallback: (handle: number) => void;
+          }
+        ).cancelIdleCallback(idleHandle);
+      }
+
+      if (timeoutHandle !== null && typeof window !== "undefined") {
+        window.clearTimeout(timeoutHandle);
+      }
     };
   }, [isExpanded, metadataLoaded]);
 
@@ -431,7 +473,7 @@ const SearchBar: React.FC = () => {
                 <i className="ri-equalizer-line text-base" aria-hidden="true" />
                 <span>筛选</span>
               </button>
-              <div className="card dropdown-content z-[1] shadow-lg bg-base-200 rounded-xl w-72">
+              <div className="card dropdown-content z-10 shadow-lg bg-base-200 rounded-xl w-72">
                 <div className="card-body p-4 gap-3">
                   <div>
                     <h6 className="font-semibold text-base">标签</h6>

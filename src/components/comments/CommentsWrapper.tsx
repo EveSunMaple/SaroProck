@@ -1,6 +1,6 @@
 // src/components/comments/CommentsWrapper.tsx
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import CommentForm from "./CommentForm";
 import CommentList from "./CommentList";
 
@@ -28,6 +28,52 @@ interface Props {
   displayMode?: "full" | "compact" | "guestbook";
 }
 
+const sortCommentTree = (nodes: CommentData[]) => {
+  nodes.sort((a, b) => a.createdAt.getTime() - b.createdAt.getTime());
+  nodes.forEach((node) => {
+    if (node.children.length > 0) {
+      sortCommentTree(node.children);
+    }
+  });
+};
+
+const buildPresentationComments = (
+  rootComments: CommentData[],
+  displayMode: Props["displayMode"],
+) => {
+  const normalizedRoots = rootComments.map((comment) => ({
+    ...comment,
+    children: [...comment.children],
+  }));
+
+  sortCommentTree(normalizedRoots);
+
+  if (displayMode === "guestbook") {
+    return [...normalizedRoots].sort(
+      (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+    );
+  }
+
+  const flattened: CommentData[] = [];
+  const flattenNode = (comment: CommentData, level: number) => {
+    const children = comment.children;
+    const snapshot: CommentData = {
+      ...comment,
+      level,
+      children: [],
+    };
+    flattened.push(snapshot);
+    children.forEach((child) => {
+      flattenNode(child, level + 1);
+    });
+  };
+
+  normalizedRoots.forEach((comment) => {
+    flattenNode(comment, 0);
+  });
+  return flattened;
+};
+
 const getDeviceId = (): string => {
   const key = "comment_device_id";
   let deviceId = localStorage.getItem(key);
@@ -46,99 +92,102 @@ const CommentsWrapper: React.FC<Props> = ({
   const [comments, setComments] = useState<CommentData[]>([]);
   const [loading, setLoading] = useState(true);
   const [deviceId, setDeviceId] = useState<string | null>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const latestRequestKey = useRef<string>("");
 
   useEffect(() => {
     setDeviceId(getDeviceId());
   }, []);
 
-  const fetchComments = useCallback(async () => {
-    if (!deviceId) return;
-    setLoading(true);
-    try {
-      const url = `/api/comments?identifier=${encodeURIComponent(identifier)}&commentType=${commentType}&deviceId=${deviceId}`;
-      const response = await fetch(url);
-      if (!response.ok) throw new Error("Failed to fetch comments");
+  useEffect(() => {
+    return () => {
+      abortControllerRef.current?.abort();
+    };
+  }, []);
 
-      const results = await response.json();
-      const commentMap = new Map<string, CommentData>();
+  const fetchComments = useCallback(
+    async (options: { silent?: boolean } = {}) => {
+      if (!deviceId) return;
 
-      results.forEach(
-        (
-          c: CommentData & {
-            objectId?: string;
-            parent?: { objectId?: string };
+      const requestKey = `${identifier}-${commentType}`;
+      latestRequestKey.current = requestKey;
+
+      if (!options.silent) {
+        setLoading(true);
+      }
+
+      abortControllerRef.current?.abort();
+      const controller = new AbortController();
+      abortControllerRef.current = controller;
+      try {
+        const url = `/api/comments?identifier=${encodeURIComponent(identifier)}&commentType=${commentType}&deviceId=${deviceId}`;
+        const response = await fetch(url, { signal: controller.signal });
+        if (!response.ok) throw new Error("Failed to fetch comments");
+
+        const results = await response.json();
+        const commentMap = new Map<string, CommentData>();
+
+        results.forEach(
+          (
+            c: CommentData & {
+              objectId?: string;
+              parent?: { objectId?: string };
+            },
+          ) => {
+            const commentId = c.id || c.objectId || "";
+            if (!commentId) return;
+
+            commentMap.set(commentId, {
+              ...c,
+              id: commentId,
+              createdAt: new Date(c.createdAt),
+              likes: c.likes || 0,
+              isLiked: c.isLiked || false,
+              parentId: c.parent?.objectId || c.parentId,
+              children: [],
+              level: 0,
+              commentType,
+              identifier,
+            });
           },
-        ) => {
-          const commentId = c.id || c.objectId || "";
-          if (!commentId) return;
+        );
 
-          commentMap.set(commentId, {
-            ...c,
-            id: commentId,
-            createdAt: new Date(c.createdAt),
-            likes: c.likes || 0,
-            isLiked: c.isLiked || false,
-            parentId: c.parent?.objectId || c.parentId,
-            children: [],
-            level: 0,
-            commentType,
-            identifier,
-          });
-        },
-      );
-
-      const rootComments: CommentData[] = [];
-      commentMap.forEach((comment) => {
-        if (comment.parentId && commentMap.has(comment.parentId)) {
-          commentMap.get(comment.parentId)?.children.push(comment);
-        } else {
-          rootComments.push(comment);
-        }
-      });
-
-      // 递归为子评论排序
-      const sortChildren = (nodes: CommentData[]) => {
-        nodes.forEach((node) => {
-          if (node.children.length > 0) {
-            node.children.sort(
-              (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-            );
-            sortChildren(node.children);
+        const rootComments: CommentData[] = [];
+        commentMap.forEach((comment) => {
+          if (comment.parentId && commentMap.has(comment.parentId)) {
+            commentMap.get(comment.parentId)?.children.push(comment);
+          } else {
+            rootComments.push(comment);
           }
         });
-      };
-      sortChildren(rootComments);
 
-      // 如果是 guestbook 模式，我们直接使用树形结构的顶层评论
-      if (displayMode === "guestbook") {
-        rootComments.sort(
-          (a, b) => b.createdAt.getTime() - a.createdAt.getTime(),
+        const processedComments = buildPresentationComments(
+          rootComments,
+          displayMode,
         );
-        setComments(rootComments);
-      } else {
-        // 其他模式下，扁平化处理
-        const flattenedComments: CommentData[] = [];
-        const flatten = (comment: CommentData, level: number) => {
-          const { children, ...rest } = comment;
-          flattenedComments.push({ ...rest, level } as CommentData);
-          for (const child of children) {
-            flatten(child, level + 1);
-          }
-        };
-        const sortedComments = [...rootComments].sort(
-          (a, b) => a.createdAt.getTime() - b.createdAt.getTime(),
-        );
-        for (const comment of sortedComments) {
-          flatten(comment, 0);
+        if (
+          latestRequestKey.current === requestKey &&
+          !controller.signal.aborted
+        ) {
+          setComments(processedComments);
         }
-        setComments(flattenedComments);
+      } catch (error) {
+        if ((error as Error).name !== "AbortError") {
+          console.error("Error fetching comments:", error);
+        }
+      } finally {
+        if (
+          latestRequestKey.current === requestKey &&
+          !controller.signal.aborted
+        ) {
+          if (!options.silent) {
+            setLoading(false);
+          }
+        }
       }
-    } catch (error) {
-      console.error("Error fetching comments:", error);
-    } finally {
-      setLoading(false);
-    }
-  }, [identifier, commentType, deviceId, displayMode]);
+    },
+    [identifier, commentType, deviceId, displayMode],
+  );
 
   useEffect(() => {
     if (deviceId) {
@@ -147,9 +196,7 @@ const CommentsWrapper: React.FC<Props> = ({
   }, [deviceId, fetchComments]);
 
   const handleCommentAdded = useCallback(() => {
-    setTimeout(() => {
-      fetchComments();
-    }, 500);
+    fetchComments({ silent: true });
   }, [fetchComments]);
 
   const handleLike = useCallback(
@@ -184,7 +231,7 @@ const CommentsWrapper: React.FC<Props> = ({
         // fetchComments(); // 或者直接重新获取
       } catch (error) {
         console.error("Error liking comment:", error);
-        fetchComments(); // 如果失败，则回滚
+        fetchComments({ silent: true }); // 如果失败，则回滚
       }
     },
     [deviceId, commentType, fetchComments],
