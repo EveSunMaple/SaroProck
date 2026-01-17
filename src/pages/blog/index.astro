@@ -26,7 +26,7 @@ const posts = await getCollection(
 );
 
 const computeReadingMetrics = (body: string) => {
-  const plainText = body.replace(/---[\s\S]*?---/, "");
+  const plainText = body.replace(/^---[\s\S]*?\n---\s*\n/, "");
   const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
   const englishWords = (plainText.match(/[a-zA-Z0-9'-]+/g) || []).length;
 
