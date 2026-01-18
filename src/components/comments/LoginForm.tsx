@@ -86,7 +86,7 @@ const LoginForm: React.FC = () => {
         <header className="space-y-1">
           <h2 className="text-2xl font-semibold flex items-center gap-2 text-primary">
             <i className="ri-user-smile-line text-xl" />
-            留下你的足迹
+            <span>留下你的足迹</span>
           </h2>
           <p className="text-sm text-base-content/70">
             你的信息会保存在本地浏览器中，方便下次自动填入。
@@ -99,7 +99,7 @@ const LoginForm: React.FC = () => {
               htmlFor="nickname"
               className="label font-medium text-base-content mb-2"
             >
-              昵称
+              <span>昵称</span>
               <span className="text-error ml-0.5">*</span>
             </label>
             <input
@@ -120,7 +120,7 @@ const LoginForm: React.FC = () => {
               htmlFor="email"
               className="label font-medium text-base-content mb-2"
             >
-              邮箱
+              <span>邮箱</span>
               <span className="text-error ml-0.5">*</span>
             </label>
             <input
@@ -139,7 +139,7 @@ const LoginForm: React.FC = () => {
               htmlFor="website"
               className="label font-medium text-base-content mb-2"
             >
-              网站
+              <span>网站</span>
               <span className="text-base-content/50">(可选)</span>
             </label>
             <input
@@ -158,7 +158,7 @@ const LoginForm: React.FC = () => {
                 htmlFor="admin-password"
                 className="label font-medium text-base-content mb-2"
               >
-                管理员密码
+                <span>管理员密码</span>
                 <span className="text-error ml-0.5">*</span>
               </label>
               <input
@@ -186,7 +186,7 @@ const LoginForm: React.FC = () => {
             className={`btn btn-primary rounded-lg gap-1 ${isSubmitting ? "loading" : ""}`}
             disabled={isSubmitting}
           >
-            {isSubmitting ? "处理中..." : "保存并返回"}
+            <span>{isSubmitting ? "处理中..." : "保存并返回"}</span>
             <i className="ri-arrow-right-line" />
           </button>
         </div>

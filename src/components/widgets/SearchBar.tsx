@@ -36,7 +36,7 @@ type ContentMetadataResponse = {
 };
 
 const escapeRegExp = (text: string) =>
-  text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  text.replaceAll(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
 const highlightMatch = (text: string, keywords: string[]) => {
   if (!text) return "";
@@ -47,7 +47,7 @@ const highlightMatch = (text: string, keywords: string[]) => {
   sortedKeywords.forEach((keyword) => {
     const escapedKeyword = escapeRegExp(keyword);
     const regex = new RegExp(`(${escapedKeyword})`, "gi");
-    result = result.replace(regex, '<mark class="search-mark">$1</mark>');
+    result = result.replaceAll(regex, '<mark class="search-mark">$1</mark>');
   });
 
   return result;
@@ -430,6 +430,7 @@ const SearchBar: React.FC = () => {
         id="search-bar"
         className={searchBarClasses}
       >
+        <span className="sr-only">搜索</span>
         <div className="search-icon px-2 text-base-content/80">
           <i
             className="ri-search-line text-lg leading-none"

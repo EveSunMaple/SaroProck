@@ -306,13 +306,13 @@ const Dashboard: React.FC = () => {
 
       <div className="divider my-8 flex items-center gap-2">
         <i className="ri-bar-chart-2-line text-lg" />
-        访问趋势
+        <span>访问趋势</span>
       </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4 flex items-center gap-2">
           <i className="ri-pulse-line" />
-          访问趋势
+          <span>访问趋势</span>
         </h3>
         {viewsLoading ? (
           <div className="flex justify-center items-center h-[300px]">
@@ -414,14 +414,14 @@ const Dashboard: React.FC = () => {
 
       <div className="divider my-8 flex items-center gap-2">
         <i className="ri-bar-chart-line text-lg" />
-        每日浏览量
+        <span>每日浏览量</span>
       </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <div className="flex justify-between items-center mb-4">
           <h3 className="font-bold flex items-center gap-2">
             <i className="ri-line-chart-line" />
-            每日博客浏览量
+            <span>每日博客浏览量</span>
           </h3>
           <select
             className="select select-sm select-bordered"
@@ -486,13 +486,13 @@ const Dashboard: React.FC = () => {
 
       <div className="divider my-8 flex items-center gap-2">
         <i className="ri-file-chart-line text-lg" />
-        内容统计
+        <span>内容统计</span>
       </div>
 
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4 mb-6">
         <h3 className="font-bold mb-4 flex items-center gap-2">
           <i className="ri-file-list-3-line" />
-          各内容互动与浏览统计
+          <span>各内容互动与浏览统计</span>
         </h3>
         <div className="flex flex-wrap items-center justify-between gap-3 mb-4 text-sm">
           <div className="flex flex-wrap gap-2">
@@ -502,7 +502,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setPostsFilter("all")}
             >
               <i className="ri-apps-2-line mr-1" />
-              全部
+              <span>全部</span>
             </button>
             <button
               type="button"
@@ -510,7 +510,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setPostsFilter("blog")}
             >
               <i className="ri-article-line mr-1" />
-              博客
+              <span>博客</span>
             </button>
             <button
               type="button"
@@ -518,7 +518,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setPostsFilter("telegram")}
             >
               <i className="ri-message-3-line mr-1" />
-              动态
+              <span>动态</span>
             </button>
           </div>
           {postsStats && postsStats.length > 12 && (
@@ -528,7 +528,7 @@ const Dashboard: React.FC = () => {
               onClick={() => setShowAllPosts((v) => !v)}
             >
               <i className={showAllPosts ? "ri-eye-off-line" : "ri-eye-line"} />
-              {showAllPosts ? "只看前 12 条" : "显示全部"}
+              <span>{showAllPosts ? "只看前 12 条" : "显示全部"}</span>
             </button>
           )}
         </div>
@@ -573,7 +573,7 @@ const Dashboard: React.FC = () => {
                           </span>
                           <span className="text-xs font-bold opacity-80 flex items-center gap-1">
                             <i className="ri-fire-line text-warning" />
-                            {totalInteraction}
+                            <span>{totalInteraction}</span>
                           </span>
                         </div>
                         <h4 className="font-semibold text-sm mb-2 line-clamp-2 group-hover:text-primary transition-colors">
@@ -608,7 +608,7 @@ const Dashboard: React.FC = () => {
                 {totalCount > 12 && !showAllPosts && (
                   <div className="text-center mt-4 text-sm opacity-60 flex items-center justify-center gap-1">
                     <i className="ri-information-line" />
-                    仅显示前 12 条，共{" "}
+                    <span>仅显示前 12 条，共 </span>
                     <span className="font-semibold">{totalCount}</span> 条记录
                   </div>
                 )}
@@ -625,7 +625,7 @@ const Dashboard: React.FC = () => {
 
       <div className="divider my-8 flex items-center gap-2">
         <i className="ri-rocket-2-line text-lg" />
-        快捷入口
+        <span>快捷入口</span>
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -635,7 +635,7 @@ const Dashboard: React.FC = () => {
         >
           <div className="flex items-center gap-2 font-bold text-lg">
             <i className="ri-chat-settings-line" />
-            评论管理
+            <span>评论管理</span>
           </div>
           <p className="text-xs font-normal opacity-70 mt-1">
             管理、审核和删除所有页面的评论。
@@ -644,7 +644,7 @@ const Dashboard: React.FC = () => {
         <div className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left rounded-xl btn-disabled">
           <div className="flex items-center gap-2 font-bold text-lg">
             <i className="ri-bar-chart-box-line" />
-            更多统计
+            <span>更多统计</span>
           </div>
           <p className="text-xs font-normal opacity-70 mt-1">
             功能正在开发中...

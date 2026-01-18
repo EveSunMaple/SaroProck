@@ -187,7 +187,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               <span className="inline-flex items-center justify-center w-10 h-10 rounded-2xl bg-linear-to-br from-primary/80 to-secondary/80 text-primary-content shadow-md">
                 <i className="ri-article-line text-lg" aria-hidden="true" />
               </span>
-              博客总览
+              <span>博客总览</span>
             </h1>
             <p className="text-sm text-base-content/70 mt-2">
               总共 {posts.length} 篇文章，支持标签与分类组合筛选。
@@ -220,7 +220,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                 onClick={clearFilters}
               >
                 <i className="ri-refresh-line" aria-hidden="true" />
-                重置
+                <span>重置</span>
               </button>
             )}
           </div>
@@ -240,7 +240,8 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               </button>
             ) : (
               <span className="badge badge-outline badge-lg border-dashed border-base-content/30 text-base-content/60">
-                <i className="ri-stack-line" aria-hidden="true" /> 全部分类
+                <i className="ri-stack-line" aria-hidden="true" />
+                <span>全部分类</span>
               </span>
             )}
 
@@ -259,8 +260,8 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               ))
             ) : (
               <span className="badge badge-outline badge-lg border-dashed border-base-content/30 text-base-content/60">
-                <i className="ri-price-tag-3-line" aria-hidden="true" />{" "}
-                未选择标签
+                <i className="ri-price-tag-3-line" aria-hidden="true" />
+                <span>未选择标签</span>
               </span>
             )}
           </div>
@@ -273,7 +274,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                 onClick={clearFilters}
               >
                 <i className="ri-refresh-line" aria-hidden="true" />
-                清除筛选
+                <span>清除筛选</span>
               </button>
             )}
             <button
@@ -322,7 +323,8 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
             <div className="space-y-6 max-h-[60vh] overflow-y-auto pr-1">
               <section>
                 <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
-                  <i className="ri-stack-line" aria-hidden="true" /> 分类
+                  <i className="ri-stack-line" aria-hidden="true" />
+                  <span>分类</span>
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button
@@ -358,7 +360,8 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
 
               <section>
                 <h3 className="text-sm font-medium text-base-content/70 flex items-center gap-2">
-                  <i className="ri-price-tag-3-line" aria-hidden="true" /> 标签
+                  <i className="ri-price-tag-3-line" aria-hidden="true" />
+                  <span>标签</span>
                 </h3>
                 <div className="mt-3 flex flex-wrap gap-2">
                   {tags.length === 0 ? (
@@ -476,7 +479,8 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                         key={`${post.slug}-tag-${tag}`}
                         className="badge badge-outline whitespace-nowrap"
                       >
-                        <i className="ri-hashtag" aria-hidden="true" /> {tag}
+                        <i className="ri-hashtag" aria-hidden="true" />
+                        <span>{tag}</span>
                       </span>
                     ))}
                   </div>
@@ -487,14 +491,14 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                         className="ri-book-open-line text-base"
                         aria-hidden="true"
                       />
-                      {post.words.toLocaleString()} 字
+                      <span>{post.words.toLocaleString()} 字</span>
                     </span>
                     <span className="flex items-center gap-2">
                       <i
                         className="ri-time-line text-base"
                         aria-hidden="true"
                       />
-                      预计 {post.readingMinutes} 分钟
+                      <span>预计 {post.readingMinutes} 分钟</span>
                     </span>
                   </div>
                 </div>
@@ -523,7 +527,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               disabled={currentPage === 1}
             >
               <i className="ri-arrow-left-line" aria-hidden="true" />
-              上一页
+              <span>上一页</span>
             </button>
             {getPageItems(currentPage, totalPages).map((item) => {
               if (item === "ellipsis-start" || item === "ellipsis-end") {
@@ -556,7 +560,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               }
               disabled={currentPage === totalPages}
             >
-              下一页
+              <span>下一页</span>
               <i className="ri-arrow-right-line" aria-hidden="true" />
             </button>
           </nav>

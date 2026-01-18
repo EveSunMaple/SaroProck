@@ -38,7 +38,7 @@ export async function getChannelFeed(
         $(".tgme_channel_info_counter .counter_value")
           .eq(0)
           .text()
-          .replace(/\s/g, ""),
+          .replaceAll(/\s/g, ""),
         10,
       ) || null,
     photos:
@@ -46,7 +46,7 @@ export async function getChannelFeed(
         $(".tgme_channel_info_counter .counter_value")
           .eq(1)
           .text()
-          .replace(/\s/g, ""),
+          .replaceAll(/\s/g, ""),
         10,
       ) || null,
     posts: posts.reverse(),

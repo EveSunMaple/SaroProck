@@ -20,7 +20,7 @@ const InlineComments: React.FC<Props> = ({ identifier, commentType }) => {
           onClick={() => setOpen(true)}
         >
           <i className="ri-chat-3-line" />
-          查看评论 / 参与讨论
+          <span>查看评论 / 参与讨论</span>
         </button>
       </div>
     );

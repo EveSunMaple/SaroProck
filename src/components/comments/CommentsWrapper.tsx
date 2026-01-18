@@ -329,7 +329,7 @@ const CommentsWrapper: React.FC<Props> = ({
       />
       {displayMode === "full" && (
         <div className="mt-6 text-sm text-right">
-          本评论区由{" "}
+          <span>本评论区由 </span>
           <a
             href="https://github.com/EveSunMaple"
             className="text-primary"
@@ -337,8 +337,8 @@ const CommentsWrapper: React.FC<Props> = ({
             rel="noopener noreferrer"
           >
             EveSunMaple
-          </a>{" "}
-          自主开发
+          </a>
+          <span> 自主开发</span>
         </div>
       )}
     </div>

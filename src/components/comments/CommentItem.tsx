@@ -198,7 +198,7 @@ const CommentItemComponent: React.FC<Props> = ({
               <span
                 className="text-base-content/80 break-all"
                 dangerouslySetInnerHTML={{
-                  __html: comment.content.replace(/<p>(.*?)<\/p>/g, "$1"),
+                  __html: comment.content.replaceAll(/<p>(.*?)<\/p>/g, "$1"),
                 }}
               />
             </p>

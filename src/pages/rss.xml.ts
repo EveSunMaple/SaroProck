@@ -14,7 +14,7 @@ export async function GET(context: any) {
   const posts = await getAllPostsWithShortLinks(context.site);
 
   function replacePath(content: string, siteUrl: string): string {
-    return content.replace(/(src|href)="([^"]+)"/g, (match, attr, value) => {
+    return content.replaceAll(/(src|href)="([^"]+)"/g, (match, attr, value) => {
       if (!/^https?:\/\/|^\/\//.test(value) && !value.startsWith("data:")) {
         try {
           return `${attr}="${new URL(value, siteUrl).toString()}"`;

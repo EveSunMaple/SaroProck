@@ -98,7 +98,7 @@ const CommentForm: React.FC<Props> = ({
             className="btn btn-ghost btn-sm rounded-lg"
           >
             <i className="ri-close-line" />
-            取消
+            <span>取消</span>
           </button>
           <button
             type="submit"
@@ -113,7 +113,7 @@ const CommentForm: React.FC<Props> = ({
             ) : (
               <>
                 <i className="ri-send-plane-2-line" />
-                回复
+                <span>回复</span>
               </>
             )}
           </button>
@@ -179,7 +179,7 @@ const CommentForm: React.FC<Props> = ({
             className="btn btn-ghost btn-sm rounded-lg"
           >
             <i className="ri-logout-circle-line" />
-            登出
+            <span>登出</span>
           </button>
         </div>
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -206,7 +206,7 @@ const CommentForm: React.FC<Props> = ({
               ) : (
                 <>
                   <i className="ri-send-plane-2-line" />
-                  发送
+                  <span>发送</span>
                 </>
               )}
             </button>
@@ -224,7 +224,7 @@ const CommentForm: React.FC<Props> = ({
       </p>
       <a href={redirectHref} className="btn btn-primary rounded-lg">
         <i className="ri-user-smile-line mr-1" />
-        登录以发表评论
+        <span>登录以发表评论</span>
       </a>
     </div>
   );
