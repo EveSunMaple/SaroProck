@@ -1,11 +1,9 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content";
 import BlogExplorer from "@components/blog/BlogExplorer";
 import Layout from "@layouts/Layout.astro";
+import { getAllPostsWithShortLinks } from "@/lib/blog";
 
 export const prerender = true;
-
-type BlogEntry = CollectionEntry<"blog">;
 
 interface Post {
   slug: string;
@@ -20,27 +18,11 @@ interface Post {
   coverImage: string | null;
 }
 
-const posts = await getCollection(
-  "blog",
-  (entry: BlogEntry) => entry.data.draft !== true,
-);
-
-const computeReadingMetrics = (body: string) => {
-  const plainText = body.replace(/^---[\s\S]*?\n---\s*\n/, "");
-  const chineseChars = (plainText.match(/[\u4e00-\u9fa5]/g) || []).length;
-  const englishWords = (plainText.match(/[a-zA-Z0-9'-]+/g) || []).length;
-
-  const chineseMinutes = chineseChars / 300;
-  const englishMinutes = englishWords / 200;
-  const totalMinutes = Math.max(1, Math.ceil(chineseMinutes + englishMinutes));
-  const words = chineseChars + englishWords;
-
-  return { words, totalMinutes };
-};
+const posts = await getAllPostsWithShortLinks(Astro.site!);
 
 const blogPosts: Post[] = posts
-  .map((post: BlogEntry) => {
-    const { words, totalMinutes } = computeReadingMetrics(post.body);
+  .map((post) => {
+    const { words, readingMinutes } = post.readingStats;
 
     return {
       slug: post.slug,
@@ -49,7 +31,7 @@ const blogPosts: Post[] = posts
       categories: post.data.categories ?? [],
       tags: post.data.tags ?? [],
       words,
-      readingMinutes: totalMinutes,
+      readingMinutes,
       url: `/blog/${post.slug}`,
       pubDate: post.data.pubDate.toISOString(),
       coverImage: post.data.image ?? null,

@@ -315,7 +315,7 @@ const Dashboard: React.FC = () => {
           <span>访问趋势</span>
         </h3>
         {viewsLoading ? (
-          <div className="flex justify-center items-center h-[300px]">
+          <div className="flex justify-center items-center h-75">
             <span className="loading loading-spinner loading-lg" />
           </div>
         ) : views ? (
@@ -374,19 +374,19 @@ const Dashboard: React.FC = () => {
           <>
             <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
               <h3 className="font-bold mb-2">Top 5 来源</h3>
-              <div className="flex justify-center items-center h-[200px]">
+              <div className="flex justify-center items-center h-50">
                 <span className="loading loading-spinner" />
               </div>
             </div>
             <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
               <h3 className="font-bold mb-2">Top 5 国家</h3>
-              <div className="flex justify-center items-center h-[200px]">
+              <div className="flex justify-center items-center h-50">
                 <span className="loading loading-spinner" />
               </div>
             </div>
             <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl p-4">
               <h3 className="font-bold mb-2">Top 5 操作系统</h3>
-              <div className="flex justify-center items-center h-[200px]">
+              <div className="flex justify-center items-center h-50">
                 <span className="loading loading-spinner" />
               </div>
             </div>
@@ -436,7 +436,7 @@ const Dashboard: React.FC = () => {
           </select>
         </div>
         {dailyViewsLoading ? (
-          <div className="flex justify-center items-center h-[300px]">
+          <div className="flex justify-center items-center h-75">
             <span className="loading loading-spinner loading-lg" />
           </div>
         ) : dailyViews && dailyViews.length > 0 ? (
@@ -533,7 +533,7 @@ const Dashboard: React.FC = () => {
           )}
         </div>
         {postsStatsLoading ? (
-          <div className="flex justify-center items-center h-[300px]">
+          <div className="flex justify-center items-center h-75">
             <span className="loading loading-spinner loading-lg" />
           </div>
         ) : postsStats && postsStats.length > 0 ? (

@@ -10,6 +10,9 @@ type SearchIndexEntry = {
   tags: string[];
   categories: string[];
   contentText: string;
+  words: number;
+  readingMinutes: number;
+  pubDate: string;
 };
 
 type MatchDetails = {
@@ -28,6 +31,9 @@ type ClientSearchResult = {
   matchScore: number;
   matchDetails: MatchDetails;
   keywords: string[];
+  words: number;
+  readingMinutes: number;
+  pubDate: string;
 };
 
 type ContentMetadataResponse = {
@@ -342,6 +348,9 @@ const SearchBar: React.FC = () => {
               matchScore,
               matchDetails,
               keywords: rawKeywords,
+              words: entry.words ?? 0,
+              readingMinutes: entry.readingMinutes ?? 1,
+              pubDate: entry.pubDate ?? "",
             });
           });
 
@@ -591,48 +600,86 @@ const SearchBar: React.FC = () => {
               <p className="text-base-content/70">没有匹配的结果</p>
             </div>
           ) : (
-            results.map((result) => (
-              <a
-                key={result.url}
-                href={result.url}
-                className="search-result block p-3 mb-3 hover:bg-base-200 rounded-lg transition-colors duration-300 border-l-4 border-transparent hover:border-primary group"
-              >
-                <h3
-                  className="font-semibold text-lg group-hover:text-primary transition-colors"
-                  dangerouslySetInnerHTML={{
-                    __html: highlightMatch(result.title, result.keywords),
-                  }}
-                />
-                {result.snippet ? (
-                  <p
-                    className="text-base-content/80 mt-2 line-clamp-3"
-                    dangerouslySetInnerHTML={{
-                      __html: highlightMatch(result.snippet, result.keywords),
-                    }}
-                  />
-                ) : null}
-                <div className="flex flex-wrap gap-1 mt-3">
-                  {result.categories.map((category) => (
-                    <span
-                      key={`${result.url}-category-${category}`}
-                      className={`badge badge-neutral ${result.matchDetails.categories ? "badge-primary" : ""}`}
-                      dangerouslySetInnerHTML={{
-                        __html: highlightMatch(category, result.keywords),
-                      }}
-                    />
-                  ))}
-                  {result.tags.map((tag) => (
-                    <span
-                      key={`${result.url}-tag-${tag}`}
-                      className={`badge badge-outline ${result.matchDetails.tags ? "text-primary border-primary" : ""}`}
-                      dangerouslySetInnerHTML={{
-                        __html: highlightMatch(tag, result.keywords),
-                      }}
-                    />
-                  ))}
-                </div>
-              </a>
-            ))
+            <div className="space-y-4">
+              {results.map((result) => (
+                <a
+                  key={result.url}
+                  href={result.url}
+                  className="group relative block bg-base-200/40 border border-base-content/10 rounded-2xl p-4 transition-all duration-300 hover:-translate-y-0.5 hover:border-primary/40 hover:shadow-lg"
+                >
+                  <div className="flex items-start justify-between gap-3">
+                    <div>
+                      <h3
+                        className="font-semibold text-lg group-hover:text-primary transition-colors"
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMatch(result.title, result.keywords),
+                        }}
+                      />
+                      {result.snippet && (
+                        <p
+                          className="text-base-content/70 mt-2 text-sm leading-relaxed line-clamp-3"
+                          dangerouslySetInnerHTML={{
+                            __html: highlightMatch(
+                              result.snippet,
+                              result.keywords,
+                            ),
+                          }}
+                        />
+                      )}
+                    </div>
+                    <span className="shrink-0 rounded-xl bg-primary/10 text-primary text-xs font-medium px-3 py-1">
+                      {new Date(result.pubDate).toLocaleDateString("zh-CN", {
+                        year: "numeric",
+                        month: "short",
+                        day: "numeric",
+                      })}
+                    </span>
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap gap-2">
+                    {result.categories.map((category) => (
+                      <span
+                        key={`${result.url}-category-${category}`}
+                        className={[
+                          "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                          result.matchDetails.categories
+                            ? "bg-secondary/15 border-secondary/40 text-secondary"
+                            : "border-secondary/30 text-secondary/80",
+                        ].join(" ")}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMatch(category, result.keywords),
+                        }}
+                      />
+                    ))}
+                    {result.tags.map((tag) => (
+                      <span
+                        key={`${result.url}-tag-${tag}`}
+                        className={[
+                          "inline-flex items-center gap-1 whitespace-nowrap rounded-full border px-3 py-1 text-xs font-medium transition-colors",
+                          result.matchDetails.tags
+                            ? "bg-primary/10 border-primary/40 text-primary"
+                            : "border-base-content/25 text-base-content/70",
+                        ].join(" ")}
+                        dangerouslySetInnerHTML={{
+                          __html: highlightMatch(tag, result.keywords),
+                        }}
+                      />
+                    ))}
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-center gap-4 text-xs text-base-content/60">
+                    <span className="flex items-center gap-1">
+                      <i className="ri-book-open-line text-base" aria-hidden />
+                      {result.words.toLocaleString()} 字
+                    </span>
+                    <span className="flex items-center gap-1">
+                      <i className="ri-time-line text-base" aria-hidden />
+                      预计 {result.readingMinutes} 分钟
+                    </span>
+                  </div>
+                </a>
+              ))}
+            </div>
           )}
         </div>
       </div>

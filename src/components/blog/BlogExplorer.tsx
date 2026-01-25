@@ -64,6 +64,23 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
   const [draftCategory, setDraftCategory] = useState<string | null>(null);
   const [draftTags, setDraftTags] = useState<string[]>([]);
 
+  const buildChipClass = (
+    isActive: boolean,
+    accent: "primary" | "secondary" = "primary",
+  ) => {
+    const base = "badge badge-lg transition-colors duration-200";
+    const active =
+      accent === "secondary"
+        ? "badge-secondary font-medium shadow-sm"
+        : "badge-primary font-medium shadow-sm";
+    const inactive =
+      accent === "secondary"
+        ? "badge-outline border-dashed border-base-content/30 text-base-content/60 hover:badge-soft hover:badge-secondary hover:cursor-pointer"
+        : "badge-outline border-dashed border-base-content/30 text-base-content/60 hover:badge-soft hover:badge-primary hover:cursor-pointer";
+
+    return [base, isActive ? active : inactive].join(" ");
+  };
+
   const { categories, tags } = useMemo(() => {
     if (filterOptions) {
       return filterOptions;
@@ -194,17 +211,17 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
             </p>
           </div>
           <div className="flex items-center gap-3 self-start">
-            <label className="flex items-center gap-2 text-sm text-base-content/70">
+            <label className="flex items-center gap-2 text-sm border border-base-content/10 rounded-full pl-5 pr-3 shadow-sm">
               <i className="ri-layout-grid-line text-base" aria-hidden="true" />
-              <span className="sr-only">每页展示</span>
               <select
-                className="select select-bordered select-sm"
+                className="select select-sm select-ghost focus:outline-none"
                 value={itemsPerPage}
                 onChange={(event) =>
                   handleItemsPerPageChange(
                     Number.parseInt(event.target.value, 10),
                   )
                 }
+                aria-label="每页展示数量"
               >
                 {ITEMS_PER_PAGE_OPTIONS.map((option) => (
                   <option key={option} value={option}>
@@ -213,16 +230,6 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                 ))}
               </select>
             </label>
-            {(selectedCategory || selectedTags.length > 0) && (
-              <button
-                type="button"
-                className="btn btn-sm btn-ghost"
-                onClick={clearFilters}
-              >
-                <i className="ri-refresh-line" aria-hidden="true" />
-                <span>重置</span>
-              </button>
-            )}
           </div>
         </header>
 
@@ -270,7 +277,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
             {hasActiveFilters && (
               <button
                 type="button"
-                className="btn btn-sm btn-ghost"
+                className="btn btn-sm btn-outline gap-2 rounded-full border-base-content/20"
                 onClick={clearFilters}
               >
                 <i className="ri-refresh-line" aria-hidden="true" />
@@ -279,7 +286,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
             )}
             <button
               type="button"
-              className="btn btn-primary rounded-full gap-2"
+              className="btn btn-sm btn-primary rounded-full gap-2 shadow-sm"
               onClick={openFilterModal}
             >
               <i className="ri-equalizer-line" aria-hidden="true" />
@@ -330,11 +337,10 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                   <button
                     type="button"
                     onClick={() => handleDraftCategoryToggle(null)}
-                    className={`btn btn-xs rounded-full border transition-all ${
-                      draftCategory === null
-                        ? "btn-primary"
-                        : "btn-ghost border-base-content/10 hover:border-primary/40"
-                    }`}
+                    className={buildChipClass(
+                      draftCategory === null,
+                      "secondary",
+                    )}
                   >
                     全部
                   </button>
@@ -345,11 +351,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                         key={category}
                         type="button"
                         onClick={() => handleDraftCategoryToggle(category)}
-                        className={`btn btn-xs rounded-full border transition-all ${
-                          isActive
-                            ? "btn-primary"
-                            : "btn-ghost border-base-content/10 hover:border-primary/40"
-                        }`}
+                        className={buildChipClass(isActive, "secondary")}
                       >
                         {category}
                       </button>
@@ -376,13 +378,9 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                           key={tag}
                           type="button"
                           onClick={() => handleDraftTagToggle(tag)}
-                          className={`badge badge-lg border transition-all cursor-pointer select-none ${
-                            isActive
-                              ? "badge-primary text-primary-content"
-                              : "badge-outline border-base-content/20 hover:border-primary/50 hover:text-primary"
-                          }`}
+                          className={buildChipClass(isActive)}
                         >
-                          #{tag}
+                          {tag}
                         </button>
                       );
                     })
@@ -395,21 +393,21 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
               <div className="flex w-full flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                 <button
                   type="button"
-                  className="btn btn-ghost"
+                  className="btn btn-soft rounded-xl"
                   onClick={handleModalReset}
                 >
                   重置选择
                 </button>
                 <button
                   type="button"
-                  className="btn btn-ghost"
+                  className="btn btn-soft rounded-xl"
                   onClick={closeFilterModal}
                 >
                   取消
                 </button>
                 <button
                   type="button"
-                  className="btn btn-primary"
+                  className="btn btn-primary rounded-xl"
                   onClick={handleModalApply}
                 >
                   应用筛选
@@ -479,7 +477,10 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                         key={`${post.slug}-tag-${tag}`}
                         className="badge badge-outline whitespace-nowrap"
                       >
-                        <i className="ri-hashtag" aria-hidden="true" />
+                        <i
+                          className="ri-price-tag-3-line mr-1"
+                          aria-hidden="true"
+                        />
                         <span>{tag}</span>
                       </span>
                     ))}

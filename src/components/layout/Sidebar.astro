@@ -1,6 +1,7 @@
 ---
-import { type CollectionEntry, getCollection } from "astro:content";
 import type { MarkdownHeading } from "astro";
+import { getAllPostsWithShortLinks } from "@/lib/blog";
+import { formatWordCount } from "@/lib/readingMetrics";
 import SidebarPanel from "./SidebarPanel";
 
 export interface Props {
@@ -25,28 +26,15 @@ const {
   emailAddress,
 } = Astro.props;
 
-// 动态统计数据 (无改动)
-const allPosts = await getCollection(
-  "blog",
-  ({ data }: CollectionEntry<"blog">) => data.draft !== true,
-);
-const countWords = (text: string) => {
-  text = text.replace(/[\u3000-\u303F\uFF00-\uFFEF]/g, "");
-  text = text.replace(/[`*~_#+\-![\]{}()>|]/g, "");
-  const cjkChars = text.match(/[\u4e00-\u9fa5]/g)?.length || 0;
-  const otherWords =
-    text.replace(/[\u4e00-\u9fa5]/g, " ").match(/\b\w+\b/g)?.length || 0;
-  return cjkChars + otherWords;
-};
-const totalWords = allPosts.reduce(
-  (acc: number, post: CollectionEntry<"blog">) => acc + countWords(post.body),
+const publishedPosts = await getAllPostsWithShortLinks(Astro.site!);
+const totalWords = publishedPosts.reduce(
+  (acc, post) => acc + post.readingStats.words,
   0,
 );
-const formattedTotalWords =
-  totalWords > 1000 ? `${(totalWords / 1000).toFixed(1)}k` : totalWords;
+
 const stats = {
-  articles: allPosts.length,
-  words: formattedTotalWords,
+  articles: publishedPosts.length,
+  words: formatWordCount(totalWords),
 };
 
 const contacts = {

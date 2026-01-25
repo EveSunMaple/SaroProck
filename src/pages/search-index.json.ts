@@ -12,6 +12,9 @@ interface SearchIndexEntry {
   tags: string[];
   categories: string[];
   contentText: string;
+  words: number;
+  readingMinutes: number;
+  pubDate: string;
 }
 
 export const GET: APIRoute = async ({ site }) => {
@@ -26,9 +29,16 @@ export const GET: APIRoute = async ({ site }) => {
 
   const entries: SearchIndexEntry[] = await Promise.all(
     allPosts.map(async (post) => {
-      const { title, description = "", tags = [], categories = [] } = post.data;
+      const {
+        title,
+        description = "",
+        tags = [],
+        categories = [],
+        pubDate,
+      } = post.data;
       const { value: content } = await processor.process(post.body);
       const contentText = String(content);
+      const { words, readingMinutes } = post.readingStats;
 
       return {
         title,
@@ -37,6 +47,9 @@ export const GET: APIRoute = async ({ site }) => {
         tags,
         categories,
         contentText,
+        words,
+        readingMinutes,
+        pubDate: pubDate.toISOString(),
       };
     }),
   );
