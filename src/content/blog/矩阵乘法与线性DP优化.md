@@ -14,7 +14,7 @@ categories:
   - 线性代数
 abbrlink: "67047465"
 pubDate: 2023-08-03 00:00:00
-description: ...
+description: 矩阵乘法与线性DP优化，使用矩阵快速幂优化线性动态规划
 ---
 
 ## 前言

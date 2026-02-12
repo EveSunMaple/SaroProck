@@ -14,7 +14,7 @@ tags:
   - cpp
   - OI
 title: 【动态规划】状态压缩DP
-description: ...
+description: 状态压缩DP详解，二进制状态压缩动态规划技巧
 ---
 
 ## 前言

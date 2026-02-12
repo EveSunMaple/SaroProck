@@ -13,7 +13,7 @@ categories:
   - 线性代数
 abbrlink: d3924b84
 pubDate: 2023-08-12 00:00:00
-description: ...
+description: k阶常系数线性递推方程与特征方程求解方法
 ---
 
 ## 前言

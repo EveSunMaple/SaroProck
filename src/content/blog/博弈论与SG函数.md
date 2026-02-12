@@ -13,7 +13,7 @@ categories:
   - 博弈论
 abbrlink: ddbd5f38
 pubDate: 2023-08-07 00:00:00
-description: ...
+description: 博弈论与SG函数，NIM游戏与ICG游戏公平组合游戏分析
 ---
 
 ## 前文
