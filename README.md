@@ -19,7 +19,7 @@ SaroProck 是 **静态博客 + 动态博客** 的结合体，内置评论、搜�
   - 完全通过 Telegram 频道管理，无需后台或静态文件。
   - 每次访问，博客会自动抓取并生成动态文章。
 - **自建评论与点赞系统**
-  - 基于 LeanCloud 自建系统，完全匹配站点样式。
+  - 基于 MongoDB 自建系统，完全匹配站点样式。
   - 不依赖第三方评论系统。
 - **免维护 + 全球加速**
   - 部署在 Vercel 免费 Serverless。
@@ -42,7 +42,7 @@ SaroProck 是 **静态博客 + 动态博客** 的结合体，内置评论、搜�
 - **内容源**: Telegram
 - **前端交互**: React
 - **样式**: Tailwind CSS + DaisyUI
-- **后端服务**: LeanCloud + Vercel Serverless
+- **后端服务**: MongoDB + Vercel Serverless
 
 ---
 
@@ -122,12 +122,9 @@ SaroProck 是 **静态博客 + 动态博客** 的结合体，内置评论、搜�
 ## 🔧 环境变量
 
 ```dotenv
-# LeanCloud 应用凭证 (国际版或国内版)
-# 请前往 LeanCloud 控制台 > 设置 > 应用凭证 获取
-LEANCLOUD_APP_ID=<你的 LeanCloud App ID>
-LEANCLOUD_APP_KEY=<你的 LeanCloud App Key>
-LEANCLOUD_MASTER_KEY=<你的 LeanCloud Master Key>
-LEANCLOUD_SERVER_URL=<你的 LeanCloud 服务器 URL>
+# MongoDB 连接配置（推荐 MongoDB Atlas）
+# 请前往 https://www.mongodb.com/cloud/atlas 注册并获取连接字符串
+MONGODB_URI=mongodb+srv://username:password@cluster0.xxxxx.mongodb.net/
 
 # JSON Web Token (JWT) 密钥
 # 用于用户认证和 API 安全，请使用一个长且随机的字符串
