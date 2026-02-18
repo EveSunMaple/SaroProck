@@ -1,10 +1,7 @@
 // src/pages/api/comments/like.ts
 import type { APIContext } from "astro";
-import AV from "leancloud-storage";
-import { initLeanCloud } from "@/lib/leancloud.server";
-
-// 初始化 LeanCloud (仅在服务器端)
-initLeanCloud();
+import type { ObjectId } from "mongodb";
+import { getCollection, toObjectId } from "@/lib/mongodb.server";
 
 export async function POST({ request }: APIContext): Promise<Response> {
   try {
@@ -17,31 +14,45 @@ export async function POST({ request }: APIContext): Promise<Response> {
       );
     }
 
-    const leanCloudLikeClassName =
-      commentType === "telegram" ? "TelegramCommentLike" : "CommentLike";
-    const Like = AV.Object.extend(leanCloudLikeClassName);
-    const query = new AV.Query(leanCloudLikeClassName);
+    const likeCollection =
+      commentType === "telegram" ? "telegram_comment_likes" : "comment_likes";
+    const likeColl = await getCollection(likeCollection);
+
+    // Convert commentId to ObjectId
+    let commentObjectId: ObjectId;
+    try {
+      commentObjectId = toObjectId(commentId);
+    } catch {
+      return new Response(
+        JSON.stringify({ success: false, message: "无效的 commentId" }),
+        { status: 400 },
+      );
+    }
 
     // 查询该设备是否已经为该评论点过赞
-    query.equalTo("commentId", commentId);
-    query.equalTo("deviceId", deviceId);
-    const existingLike = await query.first();
+    const existingLike = await likeColl.findOne({
+      comment: commentObjectId,
+      ip: deviceId,
+    });
 
     if (existingLike) {
       // 如果已存在，则取消点赞 (删除记录)
-      await existingLike.destroy();
+      await likeColl.deleteOne({ _id: existingLike._id });
     } else {
       // 如果不存在，则创建新点赞记录
-      const newLike = new Like();
-      newLike.set("commentId", commentId);
-      newLike.set("deviceId", deviceId); // 用 deviceId 标识用户
-      await newLike.save();
+      const now = new Date();
+      await likeColl.insertOne({
+        comment: commentObjectId,
+        ip: deviceId,
+        createdAt: now,
+        updatedAt: now,
+      });
     }
 
     // 重新计算该评论的总点赞数
-    const countQuery = new AV.Query(leanCloudLikeClassName);
-    countQuery.equalTo("commentId", commentId);
-    const totalLikes = await countQuery.count();
+    const totalLikes = await likeColl.countDocuments({
+      comment: commentObjectId,
+    });
 
     return new Response(
       JSON.stringify({

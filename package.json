@@ -48,7 +48,6 @@
     "jsdom": "^26.1.0",
     "jsonwebtoken": "^9.0.3",
     "katex": "^0.16.27",
-    "leancloud-storage": "^4.15.2",
     "lru-cache": "^11.2.4",
     "marked": "^16.4.2",
     "md5": "^2.3.0",

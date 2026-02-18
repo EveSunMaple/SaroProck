@@ -1,14 +1,10 @@
 import type { APIContext } from "astro";
-import AV from "leancloud-storage";
-import { initLeanCloud } from "@/lib/leancloud.server";
-
-// 初始化 LeanCloud（仅服务器端）
-initLeanCloud();
+import { getCollection } from "@/lib/mongodb.server";
 
 // 每篇文章总浏览量
-const POST_VIEWS_CLASS = "PostViews";
+const POST_VIEWS_COLLECTION = "post_views";
 // 每日全站浏览量（按东八区日期聚合）
-const DAILY_VIEWS_CLASS = "DailyViews";
+const DAILY_VIEWS_COLLECTION = "daily_views";
 
 function getAsiaShanghaiDateString() {
   const now = new Date();
@@ -32,10 +28,9 @@ export async function GET({ request }: APIContext): Promise<Response> {
   }
 
   try {
-    const query = new AV.Query(POST_VIEWS_CLASS);
-    query.equalTo("slug", slug);
-    const postViews = await query.first();
-    const totalViews = postViews ? postViews.get("views") || 0 : 0;
+    const collection = await getCollection(POST_VIEWS_COLLECTION);
+    const postViews = await collection.findOne({ slug });
+    const totalViews = postViews ? postViews.views || 0 : 0;
 
     return new Response(JSON.stringify({ slug, totalViews }), {
       status: 200,
@@ -67,44 +62,45 @@ export async function POST({ request }: APIContext): Promise<Response> {
     const dateKey = getAsiaShanghaiDateString();
 
     // 更新 PostViews（按 slug 统计总浏览数）
-    const postQuery = new AV.Query(POST_VIEWS_CLASS);
-    postQuery.equalTo("slug", slug);
-    let postViews = await postQuery.first();
-
-    if (!postViews) {
-      const PostViews = AV.Object.extend(POST_VIEWS_CLASS);
-      postViews = new PostViews();
-      postViews.set("slug", slug);
-      postViews.set("views", 0);
-    }
-
-    (postViews as AV.Object).increment("views", 1);
+    const postViewsCollection = await getCollection(POST_VIEWS_COLLECTION);
+    const postUpdateResult = await postViewsCollection.findOneAndUpdate(
+      { slug },
+      {
+        $inc: { views: 1 },
+        $setOnInsert: {
+          slug,
+          createdAt: now,
+        },
+        $set: {
+          updatedAt: now,
+        },
+      },
+      { upsert: true, returnDocument: "after" },
+    );
 
     // 更新 DailyViews（按日期统计全站浏览数）
-    const dailyQuery = new AV.Query(DAILY_VIEWS_CLASS);
-    dailyQuery.equalTo("date", dateKey);
-    let dailyViews = await dailyQuery.first();
-
-    if (!dailyViews) {
-      const DailyViews = AV.Object.extend(DAILY_VIEWS_CLASS);
-      dailyViews = new DailyViews();
-      dailyViews.set("date", dateKey);
-      dailyViews.set("views", 0);
-    }
-
-    (dailyViews as AV.Object).increment("views", 1);
-
-    const [savedPostViews, savedDailyViews] = await Promise.all([
-      postViews.save(),
-      dailyViews.save(),
-    ]);
+    const dailyViewsCollection = await getCollection(DAILY_VIEWS_COLLECTION);
+    const dailyUpdateResult = await dailyViewsCollection.findOneAndUpdate(
+      { date: dateKey },
+      {
+        $inc: { views: 1 },
+        $setOnInsert: {
+          date: dateKey,
+          createdAt: now,
+        },
+        $set: {
+          updatedAt: now,
+        },
+      },
+      { upsert: true, returnDocument: "after" },
+    );
 
     return new Response(
       JSON.stringify({
         success: true,
         slug,
-        totalViews: savedPostViews.get("views") || 0,
-        dailyViews: savedDailyViews.get("views") || 0,
+        totalViews: postUpdateResult?.views || 0,
+        dailyViews: dailyUpdateResult?.views || 0,
         date: dateKey,
         timestamp: now.toISOString(),
       }),

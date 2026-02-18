@@ -1,14 +1,16 @@
 import type { APIContext } from "astro";
 import DOMPurify from "dompurify";
 import { JSDOM } from "jsdom";
-import AV from "leancloud-storage";
 import { marked } from "marked";
 import md5 from "md5";
+import { ObjectId } from "mongodb";
 import { getAdminUser } from "@/lib/auth";
-import { initLeanCloud } from "@/lib/leancloud.server";
-
-// 初始化 LeanCloud (仅在服务器端)
-initLeanCloud();
+import {
+  type Comment,
+  getCollection,
+  type TelegramComment,
+  toObjectId,
+} from "@/lib/mongodb.server";
 
 const window = new JSDOM("").window;
 const dompurify = DOMPurify(window as any);
@@ -29,16 +31,19 @@ function logCommentsApiFailed(
   });
 }
 
-function getLeanCloudClassName(commentType: unknown): {
-  commentClass: string;
-  likeClass: string;
+function getCollectionNames(commentType: unknown): {
+  commentCollection: "comments" | "telegram_comments";
+  likeCollection: "comment_likes" | "telegram_comment_likes";
   type: "blog" | "telegram";
+  identifierField: "slug" | "postId";
 } {
   const type = commentType === "telegram" ? "telegram" : "blog";
   return {
     type,
-    commentClass: type === "telegram" ? "TelegramComment" : "Comment",
-    likeClass: type === "telegram" ? "TelegramCommentLike" : "CommentLike",
+    identifierField: type === "telegram" ? "postId" : "slug",
+    commentCollection: type === "telegram" ? "telegram_comments" : "comments",
+    likeCollection:
+      type === "telegram" ? "telegram_comment_likes" : "comment_likes",
   };
 }
 
@@ -55,22 +60,27 @@ function parsePagination(url: URL): { page: number; limit: number } {
 }
 
 async function fetchAdminComments(params: {
-  commentClass: string;
+  commentCollection: "comments" | "telegram_comments";
   commentType: string;
   page: number;
   limit: number;
 }): Promise<{ comments: any[]; total: number; page: number; limit: number }> {
-  const query = new AV.Query(params.commentClass);
-  query.addDescending("createdAt");
-  query.limit(params.limit);
-  query.skip((params.page - 1) * params.limit);
+  const collection = await getCollection(params.commentCollection);
 
-  const totalCount = await query.count();
-  const results = await query.find();
+  const totalCount = await collection.countDocuments();
+  const results = await collection
+    .find({})
+    .sort({ createdAt: -1 })
+    .skip((params.page - 1) * params.limit)
+    .limit(params.limit)
+    .toArray();
 
   const comments = results.map((c) => {
-    const commentJSON = c.toJSON();
-    commentJSON.identifier = commentJSON.slug || commentJSON.postId;
+    const commentJSON: any = {
+      ...c,
+      id: c._id?.toString(),
+    };
+    commentJSON.identifier = ("slug" in c ? c.slug : (c as any).postId) || "";
     commentJSON.commentType = params.commentType;
     return commentJSON;
   });
@@ -86,53 +96,91 @@ async function fetchAdminComments(params: {
 async function fetchPublicComments(params: {
   identifier: string;
   type: "blog" | "telegram";
-  commentClass: string;
-  likeClass: string;
+  commentCollection: "comments" | "telegram_comments";
+  likeCollection: "comment_likes" | "telegram_comment_likes";
+  identifierField: "slug" | "postId";
   deviceId: string | null;
 }): Promise<any[]> {
-  const query = new AV.Query(params.commentClass);
-  query.equalTo(
-    params.type === "telegram" ? "postId" : "slug",
-    params.identifier,
-  );
-  query.addAscending("createdAt");
-  query.include("parent");
-  const results = await query.find();
+  const commentCollection = await getCollection(params.commentCollection);
+  const likeCollection = await getCollection(params.likeCollection);
 
-  const commentIds = results.map((c) => c.id!).filter(Boolean);
+  const results = await commentCollection
+    .find({ [params.identifierField]: params.identifier })
+    .sort({ createdAt: 1 })
+    .toArray();
+
+  const commentIds = results
+    .map((c) => c._id?.toString())
+    .filter(Boolean) as string[];
   if (commentIds.length === 0) {
     return [];
   }
 
-  const likeQuery = new AV.Query(params.likeClass);
-  likeQuery.containedIn("commentId", commentIds);
-  const likes = await likeQuery.find();
+  // Convert string IDs to ObjectIds for query
+  const objectIds = commentIds
+    .map((id) => {
+      try {
+        return toObjectId(id);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean) as ObjectId[];
+
+  const likes = await likeCollection
+    .find({ comment: { $in: objectIds } })
+    .toArray();
 
   const likeCounts = new Map<string, number>();
   likes.forEach((like) => {
-    const commentId = like.get("commentId");
-    if (typeof commentId !== "string") return;
+    if (!like.comment) return;
+    const commentId =
+      like.comment instanceof ObjectId
+        ? like.comment.toString()
+        : (like.comment as string);
     likeCounts.set(commentId, (likeCounts.get(commentId) || 0) + 1);
   });
 
   const userLikedSet = new Set<string>();
   if (params.deviceId) {
     likes.forEach((like) => {
-      if (like.get("deviceId") === params.deviceId) {
-        const commentId = like.get("commentId");
-        if (typeof commentId === "string") {
-          userLikedSet.add(commentId);
-        }
+      if (!like || !like.comment) return;
+      // Check if this like belongs to the current device/user
+      // For regular comments, check ip field
+      // For telegram comments, check telegramId field
+      const isDeviceLike =
+        ("ip" in like && like.ip === params.deviceId) ||
+        ("telegramId" in like && like.telegramId !== undefined);
+
+      if (isDeviceLike) {
+        const commentId =
+          like.comment instanceof ObjectId
+            ? like.comment.toString()
+            : (like.comment as string);
+        userLikedSet.add(commentId);
       }
     });
   }
 
   return results.map((c) => {
-    const commentId = c.id!;
-    const commentJSON = c.toJSON();
+    const commentId = c._id?.toString() || "";
+    // Convert parent ObjectId to string if it exists
+    let parentId: string | undefined;
+    if (c.parent) {
+      if (c.parent instanceof ObjectId) {
+        parentId = c.parent.toString();
+      } else if (typeof c.parent === "string") {
+        parentId = c.parent;
+      }
+    }
+
+    const commentJSON: any = {
+      ...c,
+      id: commentId,
+      parentId: parentId,
+    };
     return {
       ...commentJSON,
-      id: commentId,
       likes: likeCounts.get(commentId) || 0,
       isLiked: userLikedSet.has(commentId),
     };
@@ -142,7 +190,8 @@ async function fetchPublicComments(params: {
 async function createComment(params: {
   identifier: string;
   type: "blog" | "telegram";
-  commentClass: string;
+  commentCollection: "comments" | "telegram_comments";
+  identifierField: "slug" | "postId";
   content: string;
   parentId?: string | null;
   finalUser: {
@@ -152,36 +201,50 @@ async function createComment(params: {
     avatar: string;
     isAdmin: boolean;
   };
-}) {
-  const Comment = AV.Object.extend(params.commentClass);
-  const comment = new Comment();
+}): Promise<any> {
+  const collection = await getCollection(params.commentCollection);
 
   const rawHtml = await marked(params.content);
   const cleanHtml = dompurify.sanitize(rawHtml);
 
-  comment.set("nickname", params.finalUser.nickname);
-  comment.set("email", params.finalUser.email);
-  comment.set("website", params.finalUser.website);
-  comment.set("avatar", params.finalUser.avatar);
-  comment.set("content", cleanHtml);
-  comment.set(
-    params.type === "telegram" ? "postId" : "slug",
-    params.identifier,
-  );
-  comment.set("isAdmin", params.finalUser.isAdmin);
+  const commentData: Partial<Comment | TelegramComment> = {
+    [params.identifierField]: params.identifier,
+    content: cleanHtml,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  };
 
-  if (params.parentId) {
-    const parentPointer = AV.Object.createWithoutData(
-      params.commentClass,
-      params.parentId,
-    );
-    comment.set("parent", parentPointer);
+  if (params.commentCollection === "comments") {
+    (commentData as Partial<Comment>).nickname = params.finalUser.nickname;
+    (commentData as Partial<Comment>).email = params.finalUser.email;
+    (commentData as Partial<Comment>).isAdmin = params.finalUser.isAdmin;
+    (commentData as Partial<Comment>).avatar = params.finalUser.avatar;
+    if (params.finalUser.website) {
+      (commentData as Partial<Comment>).website = params.finalUser.website;
+    }
+  } else {
+    (commentData as Partial<TelegramComment>).username =
+      params.finalUser.nickname;
   }
 
-  return await comment.save();
+  if (params.parentId) {
+    try {
+      commentData.parent = toObjectId(params.parentId);
+    } catch {
+      commentData.parent = params.parentId;
+    }
+  } else {
+    commentData.parent = null;
+  }
+
+  const result = await collection.insertOne(commentData as any);
+  return {
+    id: result.insertedId.toString(),
+    ...commentData,
+  };
 }
 
-// GET: 获取评论 (已修改)
+// GET: 获取评论
 export async function GET(context: APIContext): Promise<Response> {
   const { request } = context;
   const url = new URL(request.url);
@@ -189,7 +252,8 @@ export async function GET(context: APIContext): Promise<Response> {
   const commentType = url.searchParams.get("commentType") || "blog";
   const deviceId = url.searchParams.get("deviceId");
   const { page, limit } = parsePagination(url);
-  const { commentClass, likeClass, type } = getLeanCloudClassName(commentType);
+  const { commentCollection, likeCollection, type, identifierField } =
+    getCollectionNames(commentType);
 
   // 管理员路由：如果不存在 identifier，则获取所有评论
   if (!identifier) {
@@ -203,7 +267,7 @@ export async function GET(context: APIContext): Promise<Response> {
 
     try {
       const result = await fetchAdminComments({
-        commentClass,
+        commentCollection,
         commentType,
         page,
         limit,
@@ -227,8 +291,9 @@ export async function GET(context: APIContext): Promise<Response> {
     const comments = await fetchPublicComments({
       identifier,
       type,
-      commentClass,
-      likeClass,
+      commentCollection,
+      likeCollection,
+      identifierField,
       deviceId,
     });
 
@@ -250,7 +315,8 @@ export async function POST(context: APIContext): Promise<Response> {
     const data = await request.json();
     const { identifier, commentType, content, parentId, userInfo } = data;
 
-    const { commentClass, type } = getLeanCloudClassName(commentType);
+    const { commentCollection, identifierField, type } =
+      getCollectionNames(commentType);
 
     if (!identifier || !content) {
       return new Response(
@@ -261,8 +327,13 @@ export async function POST(context: APIContext): Promise<Response> {
 
     const adminUser = getAdminUser(context);
 
-    // biome-ignore lint/suspicious/noImplicitAnyLet: <>
-    let finalUser;
+    let finalUser: {
+      nickname: string;
+      email: string;
+      website?: string | null;
+      avatar: string;
+      isAdmin: boolean;
+    };
     if (adminUser) {
       // 如果是管理员 (通过cookie验证)
       finalUser = {
@@ -295,14 +366,15 @@ export async function POST(context: APIContext): Promise<Response> {
     const savedComment = await createComment({
       identifier,
       type,
-      commentClass,
+      commentCollection,
+      identifierField,
       content,
       parentId,
       finalUser,
     });
 
     return new Response(
-      JSON.stringify({ success: true, comment: savedComment.toJSON() }),
+      JSON.stringify({ success: true, comment: savedComment }),
       { status: 201 },
     );
   } catch (error) {
@@ -335,60 +407,54 @@ export async function DELETE(context: APIContext): Promise<Response> {
       );
     }
 
-    const {
-      commentClass: leanCloudClassName,
-      likeClass: leanCloudLikeClassName,
-    } = getLeanCloudClassName(commentType);
+    const { commentCollection, likeCollection } =
+      getCollectionNames(commentType);
 
-    const objectsToDelete: AV.Object[] = [];
-    const allCommentIds: string[] = [];
+    const commentColl = await getCollection(commentCollection);
+    const likeColl = await getCollection(likeCollection);
 
-    // 递归查找所有子评论
-    async function findChildren(parentId: string) {
-      const query = new AV.Query(leanCloudClassName);
-      const parentPointer = AV.Object.createWithoutData(
-        leanCloudClassName,
-        parentId,
-      );
-      query.equalTo("parent", parentPointer);
-      const children = await query.find();
+    const allCommentIds: ObjectId[] = [];
+    const queue: ObjectId[] = [];
+
+    // Convert commentId to ObjectId
+    const mainCommentIdObj = toObjectId(commentId);
+    allCommentIds.push(mainCommentIdObj);
+    queue.push(mainCommentIdObj);
+
+    // BFS to find all children comments (iterative to avoid stack overflow)
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      const children = await commentColl
+        .find({ parent: currentId })
+        .project({ _id: 1 })
+        .toArray();
 
       for (const child of children) {
-        objectsToDelete.push(child as AV.Object);
-        allCommentIds.push(child.id!);
-        await findChildren(child.id!); // 递归查找子评论的子评论
+        if (child._id && child._id instanceof ObjectId) {
+          if (!allCommentIds.some((id) => id.equals(child._id as ObjectId))) {
+            allCommentIds.push(child._id as ObjectId);
+            queue.push(child._id as ObjectId);
+          }
+        }
       }
     }
 
-    // 添加主评论
-    const mainComment = AV.Object.createWithoutData(
-      leanCloudClassName,
-      commentId,
-    );
-    objectsToDelete.push(mainComment);
-    allCommentIds.push(commentId);
-
-    // 查找并添加所有后代评论
-    await findChildren(commentId);
-
-    // 一次性删除所有评论对象
-    if (objectsToDelete.length > 0) {
-      await AV.Object.destroyAll(objectsToDelete);
+    // Delete all comments
+    if (allCommentIds.length > 0) {
+      await commentColl.deleteMany({
+        _id: { $in: allCommentIds },
+      });
     }
 
-    // 查找并删除所有相关的点赞记录
-    const likeQuery = new AV.Query(leanCloudLikeClassName);
-    likeQuery.containedIn("commentId", allCommentIds);
-    likeQuery.limit(1000);
-    const likesToDelete = await likeQuery.find();
-    if (likesToDelete.length > 0) {
-      await AV.Object.destroyAll(likesToDelete as AV.Object[]);
-    }
+    // Delete all related likes
+    await likeColl.deleteMany({
+      comment: { $in: allCommentIds },
+    });
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: `Deleted ${objectsToDelete.length} comment(s) and ${likesToDelete.length} like(s).`,
+        message: `Deleted ${allCommentIds.length} comment(s) and their likes.`,
       }),
       { status: 200 },
     );

@@ -21,7 +21,7 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
     return `${Math.floor(k)}k`;
   };
 
-  // 挂载时仅从本地存储恢复是否点赞，不请求后端，减少首页请求次数
+  // 挂载时从本地存储恢复是否点赞，并获取初始点赞数
   useEffect(() => {
     let isMounted = true;
     if (typeof window === "undefined") {
@@ -30,6 +30,25 @@ const LikeButton: React.FC<Props> = ({ postId }) => {
         isMounted = false;
       };
     }
+
+    // 获取初始点赞数
+    const fetchInitialLikeCount = async () => {
+      try {
+        const response = await fetch(
+          `/api/like?postId=${encodeURIComponent(postId)}`,
+        );
+        if (response.ok) {
+          const data = await response.json();
+          if (isMounted) {
+            setLikeCount(data.likeCount || 0);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch initial like count:", error);
+      }
+    };
+
+    fetchInitialLikeCount();
 
     try {
       const likedPosts = JSON.parse(localStorage.getItem(storageKey) || "[]");

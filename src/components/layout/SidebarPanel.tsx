@@ -87,15 +87,13 @@ export default function SidebarPanel({
               </header>
 
               <div className="relative">
-                {hasHydratedHeadings ? (
+                {hasHydratedHeadings && (
                   <TocList
                     headings={normalizedHeadings}
                     activeSlug={activeSlug}
                     onNavigate={scrollToSlug}
                     size="desktop"
                   />
-                ) : (
-                  <SkeletonLines />
                 )}
               </div>
             </section>
@@ -339,26 +337,6 @@ function TocList({ headings, activeSlug, onNavigate, size }: TocListProps) {
         })}
       </ol>
     </nav>
-  );
-}
-
-function SkeletonLines() {
-  const skeletonLines = Array.from({ length: 6 }, (_, index) => ({
-    id: `skeleton-line-${index}`,
-    width: 80 - index * 5,
-    offset: index * 4,
-  }));
-
-  return (
-    <ul className="space-y-2 py-2">
-      {skeletonLines.map((line) => (
-        <li
-          key={line.id}
-          className="h-4 bg-base-content/10 rounded-full animate-pulse"
-          style={{ width: `${line.width}%`, marginLeft: `${line.offset}px` }}
-        />
-      ))}
-    </ul>
   );
 }
 

@@ -1,12 +1,8 @@
 // src/pages/api/admin/stats-history.ts
 import type { APIContext } from "astro";
-import AV from "leancloud-storage";
 import md5 from "md5";
 import { getAdminUser } from "@/lib/auth";
-import { initLeanCloud } from "@/lib/leancloud.server";
-
-// 初始化 LeanCloud
-initLeanCloud();
+import { getCollection } from "@/lib/mongodb.server";
 
 function safeErrorMessage(error: unknown): string {
   if (error instanceof Error) return error.message;
@@ -59,38 +55,22 @@ type LikesByDate = Map<
   }
 >;
 
-type LeanCloudObjectLike = {
-  get: (key: string) => unknown;
-};
-
 async function queryStatsFromDB() {
-  const blogCommentsQuery = new AV.Query("Comment");
-  blogCommentsQuery.select("createdAt", "slug");
-  blogCommentsQuery.limit(10000);
+  const blogComments = await getCollection("comments").then((c) =>
+    c.find({}).limit(10000).toArray(),
+  );
 
-  const telegramCommentsQuery = new AV.Query("TelegramComment");
-  telegramCommentsQuery.select("createdAt", "postId");
-  telegramCommentsQuery.limit(10000);
+  const telegramComments = await getCollection("telegram_comments").then((c) =>
+    c.find({}).limit(10000).toArray(),
+  );
 
-  const blogCommentLikesQuery = new AV.Query("CommentLike");
-  blogCommentLikesQuery.select("createdAt");
-  blogCommentLikesQuery.limit(10000);
+  const blogCommentLikes = await getCollection("comment_likes").then((c) =>
+    c.find({}).limit(10000).toArray(),
+  );
 
-  const telegramCommentLikesQuery = new AV.Query("TelegramCommentLike");
-  telegramCommentLikesQuery.select("createdAt");
-  telegramCommentLikesQuery.limit(10000);
-
-  const [
-    blogComments,
-    telegramComments,
-    blogCommentLikes,
-    telegramCommentLikes,
-  ] = await Promise.all([
-    blogCommentsQuery.find(),
-    telegramCommentsQuery.find(),
-    blogCommentLikesQuery.find(),
-    telegramCommentLikesQuery.find(),
-  ]);
+  const telegramCommentLikes = await getCollection(
+    "telegram_comment_likes",
+  ).then((c) => c.find({}).limit(10000).toArray());
 
   return {
     blogComments,
@@ -101,16 +81,16 @@ async function queryStatsFromDB() {
 }
 
 function aggregateStats(rawData: {
-  blogComments: LeanCloudObjectLike[];
-  telegramComments: LeanCloudObjectLike[];
-  blogCommentLikes: LeanCloudObjectLike[];
-  telegramCommentLikes: LeanCloudObjectLike[];
+  blogComments: any[];
+  telegramComments: any[];
+  blogCommentLikes: any[];
+  telegramCommentLikes: any[];
 }): { commentsByDate: CommentsByDate; likesByDate: LikesByDate } {
   const commentsByDate: CommentsByDate = new Map();
   const likesByDate: LikesByDate = new Map();
 
   rawData.blogComments.forEach((comment) => {
-    const createdAt = toDate(comment.get("createdAt"));
+    const createdAt = toDate(comment.createdAt);
     const dateKey = createdAt.toISOString().split("T")[0];
     const stats = commentsByDate.get(dateKey) || {
       blog: 0,
@@ -123,7 +103,7 @@ function aggregateStats(rawData: {
   });
 
   rawData.telegramComments.forEach((comment) => {
-    const createdAt = toDate(comment.get("createdAt"));
+    const createdAt = toDate(comment.createdAt);
     const dateKey = createdAt.toISOString().split("T")[0];
     const stats = commentsByDate.get(dateKey) || {
       blog: 0,
@@ -136,7 +116,7 @@ function aggregateStats(rawData: {
   });
 
   rawData.blogCommentLikes.forEach((like) => {
-    const createdAt = toDate(like.get("createdAt"));
+    const createdAt = toDate(like.createdAt);
     const dateKey = createdAt.toISOString().split("T")[0];
     const stats = likesByDate.get(dateKey) || {
       posts: 0,
@@ -149,7 +129,7 @@ function aggregateStats(rawData: {
   });
 
   rawData.telegramCommentLikes.forEach((like) => {
-    const createdAt = toDate(like.get("createdAt"));
+    const createdAt = toDate(like.createdAt);
     const dateKey = createdAt.toISOString().split("T")[0];
     const stats = likesByDate.get(dateKey) || {
       posts: 0,

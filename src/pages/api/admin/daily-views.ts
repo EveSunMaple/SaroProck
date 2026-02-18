@@ -1,12 +1,8 @@
 import type { APIContext } from "astro";
-import AV from "leancloud-storage";
 import { getAdminUser } from "@/lib/auth";
-import { initLeanCloud } from "@/lib/leancloud.server";
+import { getCollection } from "@/lib/mongodb.server";
 
-// 初始化 LeanCloud
-initLeanCloud();
-
-const DAILY_VIEWS_CLASS = "DailyViews";
+const DAILY_VIEWS_COLLECTION = "daily_views";
 
 export async function GET(context: APIContext): Promise<Response> {
   const adminUser = getAdminUser(context);
@@ -20,16 +16,18 @@ export async function GET(context: APIContext): Promise<Response> {
   const days = Number.parseInt(url.searchParams.get("days") || "30", 10);
 
   try {
-    const query = new AV.Query(DAILY_VIEWS_CLASS);
-    query.addAscending("date");
-    query.limit(365); // 最多一年
-    const results = await query.find();
+    const collection = await getCollection(DAILY_VIEWS_COLLECTION);
+    const results = await collection
+      .find({})
+      .sort({ date: 1 })
+      .limit(365) // 最多一年
+      .toArray();
 
     // 将数据映射为 { date: string, views: number }
     const allData = results
       .map((item) => ({
-        date: item.get("date") as string,
-        views: (item.get("views") as number) || 0,
+        date: item.date as string,
+        views: (item.views as number) || 0,
       }))
       .sort((a, b) => a.date.localeCompare(b.date));
 

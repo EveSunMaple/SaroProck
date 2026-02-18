@@ -1,13 +1,9 @@
 // src/pages/api/like.ts
 import type { APIContext } from "astro";
-import AV from "leancloud-storage";
-import { initLeanCloud } from "@/lib/leancloud.server";
+import { getCollection } from "@/lib/mongodb.server";
 
-// 初始化 LeanCloud (仅在服务器端)
-initLeanCloud();
-
-// LeanCloud Class 名称
-const LIKES_STATS_CLASS = "PostLikes"; // 用于存储总点赞数
+// MongoDB Collection 名称
+const LIKES_STATS_COLLECTION = "post_likes";
 
 // --- GET: 获取帖子的初始点赞状态 ---
 export async function GET({ request }: APIContext): Promise<Response> {
@@ -21,10 +17,9 @@ export async function GET({ request }: APIContext): Promise<Response> {
   }
 
   try {
-    const statsQuery = new AV.Query(LIKES_STATS_CLASS);
-    statsQuery.equalTo("postId", postId);
-    const postStats = await statsQuery.first();
-    const likeCount = postStats ? postStats.get("likes") || 0 : 0;
+    const collection = await getCollection(LIKES_STATS_COLLECTION);
+    const postStats = await collection.findOne({ postId });
+    const likeCount = postStats ? postStats.likes || 0 : 0;
 
     return new Response(JSON.stringify({ likeCount }), {
       status: 200,
@@ -53,27 +48,26 @@ export async function POST({ request }: APIContext): Promise<Response> {
       );
     }
 
-    // 1. 准备点赞统计对象
-    const statsQuery = new AV.Query(LIKES_STATS_CLASS);
-    statsQuery.equalTo("postId", postId);
-    let postStats = await statsQuery.first();
+    const now = new Date();
 
-    // 如果统计对象不存在，则创建一个
-    if (!postStats) {
-      const PostLikes = AV.Object.extend(LIKES_STATS_CLASS);
-      postStats = new PostLikes();
-      postStats.set("postId", postId);
-      postStats.set("likes", 0);
-    }
-
-    // 2. 更新统计：根据 delta 调整 likes，避免降到 0 以下
-    (postStats as AV.Object)?.increment("likes", delta);
-
-    const savedStats = await postStats?.save();
-    const finalLikeCount = Math.max(
-      0,
-      savedStats ? savedStats.get("likes") || 0 : 0,
+    // 使用 upsert 和 $inc 来更新点赞统计
+    const collection = await getCollection(LIKES_STATS_COLLECTION);
+    const updateResult = await collection.findOneAndUpdate(
+      { postId },
+      {
+        $inc: { likes: delta },
+        $setOnInsert: {
+          postId,
+          createdAt: now,
+        },
+        $set: {
+          updatedAt: now,
+        },
+      },
+      { upsert: true, returnDocument: "after" },
     );
+
+    const finalLikeCount = Math.max(0, updateResult?.likes || 0);
 
     return new Response(
       JSON.stringify({ success: true, likeCount: finalLikeCount }),
