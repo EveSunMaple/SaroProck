@@ -215,15 +215,20 @@ async function createComment(params: {
     updatedAt: new Date(),
   };
 
+  // 保存用户基本信息，适用于所有评论类型
+  (commentData as any).nickname = params.finalUser.nickname;
+  (commentData as any).email = params.finalUser.email;
+  (commentData as Partial<Comment>).isAdmin = params.finalUser.isAdmin;
+  (commentData as any).avatar = params.finalUser.avatar;
+  if (params.finalUser.website) {
+    (commentData as any).website = params.finalUser.website;
+  }
+
+  // 特定类型字段
   if (params.commentCollection === "comments") {
-    (commentData as Partial<Comment>).nickname = params.finalUser.nickname;
-    (commentData as Partial<Comment>).email = params.finalUser.email;
-    (commentData as Partial<Comment>).isAdmin = params.finalUser.isAdmin;
-    (commentData as Partial<Comment>).avatar = params.finalUser.avatar;
-    if (params.finalUser.website) {
-      (commentData as Partial<Comment>).website = params.finalUser.website;
-    }
+    // 博客评论
   } else {
+    // Telegram 评论
     (commentData as Partial<TelegramComment>).username =
       params.finalUser.nickname;
   }

@@ -280,7 +280,7 @@ const CommentsManager: React.FC = () => {
                           <button
                             type="button"
                             className={`btn btn-xs ${
-                              comment.isAdmin ? "btn-soft" : "btn-warning"
+                              comment.isAdmin ? "btn-warning" : "btn-soft"
                             }`}
                             onClick={() =>
                               toggleAdminStatus(
