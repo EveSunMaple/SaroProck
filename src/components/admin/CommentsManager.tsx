@@ -23,7 +23,6 @@ interface ApiResponse {
 }
 
 const CommentsManager: React.FC = () => {
-  const [allComments, setAllComments] = useState<AdminComment[]>([]);
   const [filteredComments, setFilteredComments] = useState<AdminComment[]>([]);
   const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
@@ -48,7 +47,6 @@ const CommentsManager: React.FC = () => {
 
       const result: ApiResponse = await response.json();
       const comments = result.comments || [];
-      setAllComments(comments);
       setFilteredComments(comments);
     } catch (err: unknown) {
       const message =
@@ -107,11 +105,6 @@ const CommentsManager: React.FC = () => {
       toast.success("更新成功！", { id: updating });
 
       // 更新本地数据
-      setAllComments((prev) =>
-        prev.map((c) =>
-          c.id === commentId ? { ...c, isAdmin: !currentStatus } : c,
-        ),
-      );
       setFilteredComments((prev) =>
         prev.map((c) =>
           c.id === commentId ? { ...c, isAdmin: !currentStatus } : c,
@@ -143,7 +136,6 @@ const CommentsManager: React.FC = () => {
       setPendingDeletion(null); // 删除成功后清空待确认状态
 
       // 从数据中移除已删除的评论
-      setAllComments((prev) => prev.filter((c) => c.id !== id));
       setFilteredComments((prev) => prev.filter((c) => c.id !== id));
 
       // 如果当前页没有数据了，返回上一页

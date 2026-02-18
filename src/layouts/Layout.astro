@@ -52,12 +52,12 @@ const socialImageURL = new URL(image, Astro.site);
 const currentPath = Astro.url.pathname;
 const mobileDrawerId = "mobile-drawer";
 const navLinks = [
-  { href: "/", label: "首页" },
-  { href: "/blog", label: "博客" },
-  { href: "/post", label: "动态" },
-  { href: "/admin", label: "后台" },
-  { href: "/friends", label: "朋友" },
-  { href: "/guestbook", label: "留言" },
+  { href: "/", label: "首页", display: true },
+  { href: "/blog", label: "博客", display: true },
+  { href: "/post", label: "动态", display: false },
+  { href: "/admin", label: "后台", display: false },
+  { href: "/friends", label: "朋友", display: true },
+  { href: "/guestbook", label: "留言", display: true },
 ];
 
 const navLookup = new Map(navLinks.map((link) => [link.href, link.label]));

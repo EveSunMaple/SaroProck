@@ -4,7 +4,7 @@ import SearchBar from "@components/widgets/SearchBar";
 
 export interface Props {
   siteTitle: string;
-  navLinks: { href: string; label: string }[];
+  navLinks: { href: string; label: string; display: boolean }[];
   currentPath: string;
   mobileDrawerId: string;
 }
@@ -44,6 +44,7 @@ const { siteTitle, navLinks = [], currentPath, mobileDrawerId } = Astro.props;
           aria-label="主导航"
         >
           {navLinks.map((link) => {
+            if (!link.display) return null;
             const isActive =
               link.href === "/"
                 ? currentPath === "/"

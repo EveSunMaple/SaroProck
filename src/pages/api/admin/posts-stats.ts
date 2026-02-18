@@ -74,8 +74,8 @@ export async function GET(context: APIContext): Promise<Response> {
       const postId = "postId" in comment ? comment.postId : "";
       if (postId) {
         telegramCommentCounts.set(
-          postId,
-          (telegramCommentCounts.get(postId) || 0) + 1,
+          postId as string,
+          (telegramCommentCounts.get(postId as string) || 0) + 1,
         );
       }
     });
@@ -117,7 +117,7 @@ export async function GET(context: APIContext): Promise<Response> {
       const commentId = comment._id?.toString();
       const postId = "postId" in comment ? comment.postId : "";
       if (commentId && postId) {
-        telegramCommentToPostId.set(commentId, postId);
+        telegramCommentToPostId.set(commentId, postId as string);
       }
     });
 
