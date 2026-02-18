@@ -254,7 +254,7 @@ const CommentsWrapper: React.FC<Props> = ({
             }}
           >
             <i className="ri-pencil-line" />
-            在留言板上留下我的卡片
+            <span>在留言板上留下我的卡片</span>
           </button>
         </div>
 
@@ -308,7 +308,7 @@ const CommentsWrapper: React.FC<Props> = ({
         <>
           <h2 className="text-2xl font-bold mb-8 flex items-center gap-2">
             <i className="ri-chat-3-line" />
-            评论区
+            <span>评论区</span>
           </h2>
           <div className="divider -mt-2 mb-6" />
         </>

@@ -108,7 +108,7 @@ const CommentForm: React.FC<Props> = ({
             {submitting ? (
               <>
                 <span className="loading loading-spinner loading-xs" />
-                发送中...
+                <span>发送中...</span>
               </>
             ) : (
               <>
@@ -201,7 +201,7 @@ const CommentForm: React.FC<Props> = ({
               {submitting ? (
                 <>
                   <span className="loading loading-spinner loading-xs" />
-                  发送中...
+                  <span>发送中...</span>
                 </>
               ) : (
                 <>

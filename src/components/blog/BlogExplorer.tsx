@@ -315,7 +315,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
                   className="ri-equalizer-line text-primary"
                   aria-hidden="true"
                 />
-                筛选文章
+                <span>筛选文章</span>
               </h2>
               <button
                 type="button"

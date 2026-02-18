@@ -254,7 +254,7 @@ function EmptyState({
           <div className="flex items-center justify-between bg-base-100 rounded-xl border border-base-content/10 px-4 py-3">
             <div className="flex items-center gap-2 text-sm">
               <i className="ri-qq-line text-base-content/70" aria-hidden />
-              QQ 群
+              <span>QQ 群</span>
             </div>
             <span className="font-mono text-sm text-base-content/80">
               {contacts.qqGroup}
@@ -265,7 +265,7 @@ function EmptyState({
             className="btn btn-outline btn-primary w-full rounded-xl gap-2"
           >
             <i className="ri-mail-send-line" aria-hidden />
-            给我写信
+            <span>给我写信</span>
           </a>
         </div>
       </section>
