@@ -82,6 +82,7 @@ async function fetchAdminComments(params: {
     };
     commentJSON.identifier = ("slug" in c ? c.slug : (c as any).postId) || "";
     commentJSON.commentType = params.commentType;
+    commentJSON.isAdmin = c.isAdmin || false;
     return commentJSON;
   });
 
@@ -461,6 +462,71 @@ export async function DELETE(context: APIContext): Promise<Response> {
   } catch (error: any) {
     logCommentsApiFailed(
       "comments_api_delete_failed",
+      context.request.url,
+      error,
+    );
+    return new Response(
+      JSON.stringify({
+        success: false,
+        message: error.message || "Server internal error",
+      }),
+      { status: 500 },
+    );
+  }
+}
+
+// PATCH: 更新评论的isAdmin状态（管理员专用）
+export async function PATCH(context: APIContext): Promise<Response> {
+  const adminUser = getAdminUser(context);
+  if (!adminUser) {
+    return new Response(
+      JSON.stringify({ success: false, message: "Unauthorized" }),
+      { status: 403 },
+    );
+  }
+
+  try {
+    const { commentId, isAdmin, commentType } = await context.request.json();
+    if (!commentId || typeof isAdmin !== "boolean" || !commentType) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message:
+            "Missing required fields: commentId, isAdmin, or commentType",
+        }),
+        { status: 400 },
+      );
+    }
+
+    const { commentCollection } = getCollectionNames(commentType);
+    const collection = await getCollection(commentCollection);
+
+    // 更新评论的isAdmin字段
+    const result = await collection.updateOne(
+      { _id: toObjectId(commentId) },
+      { $set: { isAdmin, updatedAt: new Date() } },
+    );
+
+    if (result.matchedCount === 0) {
+      return new Response(
+        JSON.stringify({
+          success: false,
+          message: "Comment not found",
+        }),
+        { status: 404 },
+      );
+    }
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        message: "Comment updated successfully",
+      }),
+      { status: 200 },
+    );
+  } catch (error: any) {
+    logCommentsApiFailed(
+      "comments_api_patch_failed",
       context.request.url,
       error,
     );

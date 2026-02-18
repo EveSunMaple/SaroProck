@@ -523,7 +523,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
           >
             <button
               type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost rounded-full"
               onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
               disabled={currentPage === 1}
             >
@@ -555,7 +555,7 @@ const BlogExplorer: React.FC<Props> = ({ posts, filterOptions }) => {
             })}
             <button
               type="button"
-              className="btn btn-sm btn-ghost"
+              className="btn btn-sm btn-ghost rounded-full"
               onClick={() =>
                 setCurrentPage((prev) => Math.min(totalPages, prev + 1))
               }

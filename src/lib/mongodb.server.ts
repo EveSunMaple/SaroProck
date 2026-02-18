@@ -36,7 +36,7 @@ export function fromObjectId(objectId: ObjectId): string {
 // Document interfaces
 export interface Comment {
   _id?: ObjectId | string;
-  objectId?: string; // Keep for backward compatibility if needed
+  objectId?: string;
   slug: string;
   username: string;
   nickname?: string;
@@ -47,7 +47,6 @@ export interface Comment {
   ip?: string;
   ua?: string;
   status?: "approved" | "pending" | "spam";
-  isHost?: boolean;
   isAdmin?: boolean;
   avatar?: string;
   website?: string;
@@ -69,13 +68,17 @@ export interface TelegramComment {
   objectId?: string;
   slug: string;
   username: string;
-  firstName?: string;
-  lastName?: string;
-  photoUrl?: string;
-  messageId: number;
+  nickname?: string;
+  email: string;
   content: string;
   html?: string;
   parent?: ObjectId | string | null;
+  ip?: string;
+  ua?: string;
+  status?: "approved" | "pending" | "spam";
+  isAdmin?: boolean;
+  avatar?: string;
+  website?: string;
   createdAt?: Date;
   updatedAt?: Date;
 }
