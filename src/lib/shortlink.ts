@@ -12,7 +12,7 @@ async function generateShortHash(input: string): Promise<string> {
   // 使用现代的 Web Crypto API
   const encoder = new TextEncoder();
   const data = encoder.encode(input);
-  const hashBuffer = await crypto.subtle.digest("SHA-1", data);
+  const hashBuffer = await crypto.subtle.digest("SHA-256", data);
 
   // 将哈希值转换为16进制字符串
   const hashArray = Array.from(new Uint8Array(hashBuffer));

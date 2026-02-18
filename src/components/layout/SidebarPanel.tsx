@@ -375,13 +375,26 @@ function MobileTocFab({
 
   useEffect(() => {
     if (typeof document === "undefined") return;
-    if (isOpen) {
-      document.body.classList.add("overflow-hidden");
-    } else {
-      document.body.classList.remove("overflow-hidden");
+    try {
+      if (isOpen) {
+        document.body.classList.add("overflow-hidden");
+      } else {
+        document.body.classList.remove("overflow-hidden");
+      }
+    } catch (error) {
+      console.error("sidebar_panel_mobile_toc_body_class_failed", {
+        error: error instanceof Error ? error.message : String(error),
+      });
     }
+
     return () => {
-      document.body.classList.remove("overflow-hidden");
+      try {
+        document.body.classList.remove("overflow-hidden");
+      } catch (error) {
+        console.error("sidebar_panel_mobile_toc_cleanup_failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+      }
     };
   }, [isOpen]);
 

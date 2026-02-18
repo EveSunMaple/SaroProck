@@ -260,7 +260,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
-              <div className="stat-title">短链总访问量</div>
+              <div className="stat-title">最近 90 天短链总访问量</div>
               <div className="stat-value">
                 <span className="loading loading-spinner loading-md" />
               </div>
@@ -294,7 +294,7 @@ const Dashboard: React.FC = () => {
                 icon="ri-heart-3-line"
               />
               <StatCard
-                title="短链总访问量"
+                title="最近 90 天短链总访问量"
                 value={stats.sink.totalViews}
                 details="来自 saro.pub 的统计"
                 icon="ri-links-line"

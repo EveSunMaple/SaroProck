@@ -395,25 +395,24 @@ const SearchBar: React.FC = () => {
     }
   };
 
+  const toggleSelectedItem = (prev: string[], value: string) => {
+    if (prev.includes(value)) {
+      const next = prev.filter((item) => item !== value);
+      return next.length ? next : [];
+    }
+
+    return [...prev, value];
+  };
+
   const handleTagToggle = (tag: string) => {
     setSelectedTags((prev) => {
-      if (prev.includes(tag)) {
-        const next = prev.filter((item) => item !== tag);
-        return next.length ? next : [];
-      }
-
-      return [...prev, tag];
+      return toggleSelectedItem(prev, tag);
     });
   };
 
   const handleCategoryToggle = (category: string) => {
     setSelectedCategories((prev) => {
-      if (prev.includes(category)) {
-        const next = prev.filter((item) => item !== category);
-        return next.length ? next : [];
-      }
-
-      return [...prev, category];
+      return toggleSelectedItem(prev, category);
     });
   };
 
