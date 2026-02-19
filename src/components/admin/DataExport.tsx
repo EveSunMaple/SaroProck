@@ -171,7 +171,7 @@ const DataExport: React.FC = () => {
         </div>
 
         {/* Help Section */}
-        <div className="mt-8 alert alert-info bg-base-100/50">
+        <div className="mt-8 alert alert-info">
           <i className="ri-information-line text-xl" />
           <div>
             <h3 className="font-semibold">导出说明</h3>
