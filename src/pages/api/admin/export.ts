@@ -7,6 +7,8 @@ interface ExportOptions {
   dateTo?: string;
   format: "json" | "csv";
   type: "comments" | "likes" | "views";
+  postId?: string;
+  commentType?: "blog" | "telegram";
 }
 
 function csvEscape(value: string): string {
@@ -208,6 +210,11 @@ export async function GET(context: APIContext): Promise<Response> {
       default:
         throw new Error("Unsupported export type");
     }
+
+    const contentType =
+      options.format === "csv"
+        ? "text/csv; charset=utf-8"
+        : "application/json; charset=utf-8";
 
     return new Response(data, {
       status: 200,

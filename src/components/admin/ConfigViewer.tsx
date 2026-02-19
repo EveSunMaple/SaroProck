@@ -100,20 +100,6 @@ const ConfigViewer: React.FC = () => {
     );
   };
 
-  const _getConnectionStatus = (connected: boolean) => {
-    return connected ? (
-      <span className="inline-flex items-center gap-1 text-success">
-        <i className="ri-wifi-line" />
-        已连接
-      </span>
-    ) : (
-      <span className="inline-flex items-center gap-1 text-error">
-        <i className="ri-wifi-off-line" />
-        未连接
-      </span>
-    );
-  };
-
   const getServiceStatuses = (): ServiceStatus[] => {
     if (!config) return [];
     return [
