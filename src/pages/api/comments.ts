@@ -31,6 +31,52 @@ function logCommentsApiFailed(
   });
 }
 
+function normalizeIp(raw: string): string {
+  const ip = raw.trim();
+  if (!ip) return ip;
+
+  // Handle IPv4-mapped IPv6 addresses like ::ffff:127.0.0.1
+  const v4MappedPrefix = "::ffff:";
+  const withoutMapped = ip.toLowerCase().startsWith(v4MappedPrefix)
+    ? ip.slice(v4MappedPrefix.length)
+    : ip;
+
+  // Some platforms append port (e.g. 1.2.3.4:12345)
+  const maybeWithPort = withoutMapped;
+  if (maybeWithPort.includes(":")) {
+    // If it's a pure IPv6, keep as-is; if it's IPv4:port, split.
+    const parts = maybeWithPort.split(":");
+    if (parts.length === 2 && parts[0]?.includes(".")) {
+      return parts[0];
+    }
+  }
+
+  return withoutMapped;
+}
+
+function getClientIp(context: APIContext): string | null {
+  const headers = context.request.headers;
+
+  const candidates = [
+    // Cloudflare
+    headers.get("cf-connecting-ip"),
+    // Akamai / some CDNs
+    headers.get("true-client-ip"),
+    // Common reverse proxy headers
+    headers.get("x-real-ip"),
+    headers
+      .get("x-forwarded-for")
+      ?.split(",")
+      .map((s) => s.trim())
+      .filter(Boolean)[0],
+    // Astro runtime-provided address (best effort)
+    context.clientAddress,
+  ].filter((v): v is string => typeof v === "string" && v.trim().length > 0);
+
+  const first = candidates[0];
+  return first ? normalizeIp(first) : null;
+}
+
 function getCollectionNames(commentType: unknown): {
   commentCollection: "comments" | "telegram_comments";
   likeCollection: "comment_likes" | "telegram_comment_likes";
@@ -59,17 +105,64 @@ function parsePagination(url: URL): { page: number; limit: number } {
   return { page, limit };
 }
 
+function buildFilterQuery(url: URL): any {
+  const filters: any = {};
+  const dateFrom = url.searchParams.get("dateFrom");
+  const dateTo = url.searchParams.get("dateTo");
+  const postId = url.searchParams.get("postId");
+  const search = url.searchParams.get("search");
+  const onlyAdmin = url.searchParams.get("onlyAdmin") === "true";
+  const ipAddress = url.searchParams.get("ipAddress");
+  // Date range filter
+  if (dateFrom || dateTo) {
+    filters.createdAt = {};
+    if (dateFrom) {
+      filters.createdAt.$gte = new Date(dateFrom);
+    }
+    if (dateTo) {
+      filters.createdAt.$lte = new Date(dateTo);
+    }
+  }
+
+  // Post/identifier filter
+  if (postId) {
+    filters.identifier = postId;
+  }
+
+  // Search (email or nickname)
+  if (search) {
+    filters.$or = [
+      { email: { $regex: search, $options: "i" } },
+      { nickname: { $regex: search, $options: "i" } },
+      { username: { $regex: search, $options: "i" } },
+    ];
+  }
+
+  // Admin status filter
+  if (onlyAdmin) {
+    filters.isAdmin = true;
+  }
+
+  // IP address filter
+  if (ipAddress) {
+    filters.ip = ipAddress;
+  }
+
+  return filters;
+}
+
 async function fetchAdminComments(params: {
   commentCollection: "comments" | "telegram_comments";
   commentType: string;
   page: number;
   limit: number;
+  filters: any;
 }): Promise<{ comments: any[]; total: number; page: number; limit: number }> {
   const collection = await getCollection(params.commentCollection);
 
-  const totalCount = await collection.countDocuments();
+  const totalCount = await collection.countDocuments(params.filters);
   const results = await collection
-    .find({})
+    .find(params.filters)
     .sort({ createdAt: -1 })
     .skip((params.page - 1) * params.limit)
     .limit(params.limit)
@@ -83,6 +176,9 @@ async function fetchAdminComments(params: {
     commentJSON.identifier = ("slug" in c ? c.slug : (c as any).postId) || "";
     commentJSON.commentType = params.commentType;
     commentJSON.isAdmin = c.isAdmin || false;
+    commentJSON.ip = c.ip || "-";
+    commentJSON.ua = c.ua || "-";
+    commentJSON.status = c.status || "approved";
     return commentJSON;
   });
 
@@ -202,6 +298,8 @@ async function createComment(params: {
     avatar: string;
     isAdmin: boolean;
   };
+  ipAddress?: string | null;
+  userAgent?: string | null;
 }): Promise<any> {
   const collection = await getCollection(params.commentCollection);
 
@@ -222,6 +320,15 @@ async function createComment(params: {
   (commentData as any).avatar = params.finalUser.avatar;
   if (params.finalUser.website) {
     (commentData as any).website = params.finalUser.website;
+  }
+
+  // 保存IP地址（仅在服务端）
+  if (params.ipAddress) {
+    (commentData as any).ip = params.ipAddress;
+  }
+
+  if (params.userAgent) {
+    (commentData as any).ua = params.userAgent;
   }
 
   // 特定类型字段
@@ -271,12 +378,16 @@ export async function GET(context: APIContext): Promise<Response> {
       );
     }
 
+    // Build filters
+    const filters = buildFilterQuery(url);
+
     try {
       const result = await fetchAdminComments({
         commentCollection,
         commentType,
         page,
         limit,
+        filters,
       });
 
       return new Response(JSON.stringify(result), {
@@ -369,6 +480,10 @@ export async function POST(context: APIContext): Promise<Response> {
       };
     }
 
+    // 获取客户端IP地址（隐私保护，仅在服务端存储）
+    const ipAddress = getClientIp(context);
+    const userAgent = context.request.headers.get("user-agent");
+
     const savedComment = await createComment({
       identifier,
       type,
@@ -377,6 +492,8 @@ export async function POST(context: APIContext): Promise<Response> {
       content,
       parentId,
       finalUser,
+      ipAddress,
+      userAgent,
     });
 
     return new Response(

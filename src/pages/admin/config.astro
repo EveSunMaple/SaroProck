@@ -1,0 +1,18 @@
+---
+import ConfigViewer from "@/components/admin/ConfigViewer.tsx";
+import BaseLayout from "@/layouts/Layout.astro";
+import { getAdminUser } from "@/lib/auth";
+
+// Serve-side permission check
+const adminUser = getAdminUser(Astro);
+if (!adminUser) {
+  // Redirect non-admin users to login page
+  return Astro.redirect(`/login?redirect=${Astro.url.pathname}`);
+}
+---
+
+<BaseLayout title="系统配置 - 管理后台">
+  <div class="container mx-auto px-4 py-8">
+    <ConfigViewer client:load />
+  </div>
+</BaseLayout>

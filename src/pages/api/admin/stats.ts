@@ -20,14 +20,14 @@ export async function GET(context: APIContext): Promise<Response> {
     const [
       totalBlogComments,
       totalTelegramComments,
-      allPostLikes,
+      dailyViewsData,
       totalBlogCommentLikes,
       totalTelegramCommentLikes,
       sinkCountersResponse,
     ] = await Promise.all([
       getCollection("comments").then((c) => c.countDocuments()),
       getCollection("telegram_comments").then((c) => c.countDocuments()),
-      getCollection("post_likes").then((c) => c.find({}).limit(1000).toArray()),
+      getCollection("daily_views").then((c) => c.find({}).toArray()),
       getCollection("comment_likes").then((c) => c.countDocuments()),
       getCollection("telegram_comment_likes").then((c) => c.countDocuments()),
       // 使用统一的 Bearer 认证
@@ -39,8 +39,9 @@ export async function GET(context: APIContext): Promise<Response> {
     ]);
 
     // --- 数据处理 ---
-    const totalPostLikes = allPostLikes.reduce(
-      (sum, item) => sum + (item.likes || 0),
+    // Sum up views from daily_views collection
+    const postViews = dailyViewsData.reduce(
+      (sum, item) => sum + (item.views || 0),
       0,
     );
 
@@ -60,11 +61,13 @@ export async function GET(context: APIContext): Promise<Response> {
         telegram: totalTelegramComments,
         total: totalBlogComments + totalTelegramComments,
       },
+      views: {
+        posts: postViews,
+        sink: totalSinkViews,
+      },
       likes: {
-        posts: totalPostLikes,
         comments: totalBlogCommentLikes + totalTelegramCommentLikes,
-        total:
-          totalPostLikes + totalBlogCommentLikes + totalTelegramCommentLikes,
+        total: totalBlogCommentLikes + totalTelegramCommentLikes,
       },
       sink: {
         totalViews: totalSinkViews,

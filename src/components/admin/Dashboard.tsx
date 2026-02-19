@@ -13,7 +13,8 @@ import {
 
 interface StatsData {
   comments: { total: number; blog: number; telegram: number };
-  likes: { total: number; posts: number; comments: number };
+  views: { posts: number; sink: number };
+  likes: { comments: number; total: number };
   sink: { totalViews: number };
 }
 interface ViewsData {
@@ -254,7 +255,7 @@ const Dashboard: React.FC = () => {
               </div>
             </div>
             <div className="stat bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl">
-              <div className="stat-title">总点赞数</div>
+              <div className="stat-title">博文浏览总量</div>
               <div className="stat-value">
                 <span className="loading loading-spinner loading-md" />
               </div>
@@ -282,16 +283,10 @@ const Dashboard: React.FC = () => {
                 icon="ri-chat-3-line"
               />
               <StatCard
-                title="总点赞数"
-                value={stats.likes.total}
-                details={
-                  <>
-                    内容:
-                    {stats.likes.posts} | 评论:
-                    {stats.likes.comments}
-                  </>
-                }
-                icon="ri-heart-3-line"
+                title="博文浏览总量"
+                value={stats.views.posts}
+                details="数据来自 MongoDB"
+                icon="ri-eye-line"
               />
               <StatCard
                 title="最近 90 天短链总访问量"
@@ -628,7 +623,7 @@ const Dashboard: React.FC = () => {
         <span>快捷入口</span>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <a
           href="/admin/comments"
           className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl"
@@ -639,6 +634,42 @@ const Dashboard: React.FC = () => {
           </div>
           <p className="text-xs font-normal opacity-70 mt-1">
             管理、审核和删除所有页面的评论。
+          </p>
+        </a>
+        <a
+          href="/admin/system"
+          className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl"
+        >
+          <div className="flex items-center gap-2 font-bold text-lg">
+            <i className="ri-shield-flash-line" />
+            <span>系统监控</span>
+          </div>
+          <p className="text-xs font-normal opacity-70 mt-1">
+            实时监控系统健康状态、数据库和服务连接。
+          </p>
+        </a>
+        <a
+          href="/admin/export"
+          className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl"
+        >
+          <div className="flex items-center gap-2 font-bold text-lg">
+            <i className="ri-download-2-line" />
+            <span>数据导出</span>
+          </div>
+          <p className="text-xs font-normal opacity-70 mt-1">
+            导出评论和点赞数据为 JSON 或 CSV 格式。
+          </p>
+        </a>
+        <a
+          href="/admin/config"
+          className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-xl"
+        >
+          <div className="flex items-center gap-2 font-bold text-lg">
+            <i className="ri-settings-3-line" />
+            <span>系统配置</span>
+          </div>
+          <p className="text-xs font-normal opacity-70 mt-1">
+            查看系统配置、环境变量和服务状态。
           </p>
         </a>
         <div className="btn btn-lg h-auto py-4 flex-col justify-start items-start text-left rounded-xl btn-disabled">
