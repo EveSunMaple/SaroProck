@@ -221,15 +221,16 @@ const AudioPlayer: React.FC<AudioPlayerProps> = ({ src, captionsSrc }) => {
         onEnded={handleEnded}
         preload="metadata"
       >
-        {captionsSrc && (
-          <track
-            kind="captions"
-            src={captionsSrc}
-            label="歌词字幕"
-            srcLang="zh-CN"
-            default
-          />
-        )}
+        <track
+          kind="captions"
+          src={
+            captionsSrc ??
+            "data:text/vtt;charset=utf-8,WEBVTT%0A%0A00:00.000%20--%3E%2000:00.001%0A%0A"
+          }
+          label="歌词字幕"
+          srcLang="zh-CN"
+          default
+        />
       </audio>
       <div className="relative mt-4">
         {error && (

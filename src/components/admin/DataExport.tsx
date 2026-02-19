@@ -73,8 +73,7 @@ const DataExport: React.FC = () => {
       {/* Export Options */}
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <i className="ri-settings-2-line" />
-          导出选项
+          <i className="ri-settings-2-line" /> 导出选项
         </h2>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -117,8 +116,7 @@ const DataExport: React.FC = () => {
         {/* Filter Options */}
         <div className="mt-6">
           <h3 className="font-semibold mb-3">
-            <i className="ri-filter-2-line mr-2" />
-            筛选选项（可选）
+            <i className="ri-filter-2-line mr-2" /> 筛选选项（可选）
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             <div>
@@ -161,13 +159,12 @@ const DataExport: React.FC = () => {
           >
             {loading || exporting ? (
               <>
-                <span className="loading loading-spinner loading-sm" />
+                <span className="loading loading-spinner loading-sm" />{" "}
                 正在导出...
               </>
             ) : (
               <>
-                <i className="ri-download-2-line mr-2" />
-                开始导出
+                <i className="ri-download-2-line mr-2" /> 开始导出
               </>
             )}
           </button>
@@ -180,7 +177,7 @@ const DataExport: React.FC = () => {
             <h3 className="font-semibold">导出说明</h3>
             <ul className="mt-2 list-disc list-inside text-sm">
               <li>
-                <strong>JSON 格式</strong>
+                <strong>JSON 格式</strong>{" "}
                 ：包含完整的数据字段，适合数据备份和迁移
               </li>
               <li>

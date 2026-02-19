@@ -89,13 +89,11 @@ const ConfigViewer: React.FC = () => {
   const getStatusBadge = (active: boolean) => {
     return active ? (
       <span className="inline-flex items-center gap-1 text-success">
-        <i className="ri-checkbox-circle-line" />
-        已配置
+        <i className="ri-checkbox-circle-line" /> 已配置
       </span>
     ) : (
       <span className="inline-flex items-center gap-1 text-error">
-        <i className="ri-close-circle-line" />
-        未配置
+        <i className="ri-close-circle-line" /> 未配置
       </span>
     );
   };
@@ -181,13 +179,11 @@ const ConfigViewer: React.FC = () => {
         >
           {testing ? (
             <>
-              <span className="loading loading-spinner loading-sm" />
-              测试中...
+              <span className="loading loading-spinner loading-sm" /> 测试中...
             </>
           ) : (
             <>
-              <i className="ri-refresh-line mr-2" />
-              重新测试
+              <i className="ri-refresh-line mr-2" /> 重新测试
             </>
           )}
         </button>
@@ -196,8 +192,7 @@ const ConfigViewer: React.FC = () => {
       {/* Environment Info */}
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <i className="ri-computer-line text-primary" />
-          环境信息
+          <i className="ri-computer-line text-primary" /> 环境信息
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <div className="stat bg-base-100/40 rounded-lg">
@@ -224,8 +219,7 @@ const ConfigViewer: React.FC = () => {
       {/* Service Status */}
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <i className="ri-service-line text-primary" />
-          服务状态
+          <i className="ri-service-line text-primary" /> 服务状态
         </h2>
         <div className="space-y-4">
           {getServiceStatuses().map((service) => (
@@ -245,18 +239,15 @@ const ConfigViewer: React.FC = () => {
               <div>
                 {service.status === "good" ? (
                   <span className="inline-flex items-center gap-1 text-success">
-                    <i className="ri-checkbox-circle-line" />
-                    正常
+                    <i className="ri-checkbox-circle-line" /> 正常
                   </span>
                 ) : service.status === "warning" ? (
                   <span className="inline-flex items-center gap-1 text-warning">
-                    <i className="ri-alert-line" />
-                    警告
+                    <i className="ri-alert-line" /> 警告
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-error">
-                    <i className="ri-close-circle-line" />
-                    错误
+                    <i className="ri-close-circle-line" /> 错误
                   </span>
                 )}
               </div>
@@ -268,8 +259,7 @@ const ConfigViewer: React.FC = () => {
       {/* Feature Status */}
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <i className="ri-toggles-line text-primary" />
-          功能状态
+          <i className="ri-toggles-line text-primary" /> 功能状态
         </h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="text-center p-4 bg-base-100/40 rounded-lg">
@@ -298,8 +288,7 @@ const ConfigViewer: React.FC = () => {
       {/* Security Info */}
       <div className="bg-base-200/60 backdrop-blur-sm border border-base-content/10 rounded-lg p-6">
         <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">
-          <i className="ri-shield-check-line text-primary" />
-          安全设置
+          <i className="ri-shield-check-line text-primary" /> 安全设置
         </h2>
         <div className="space-y-4">
           <div className="flex items-center justify-between p-4 bg-base-100/40 rounded-lg">

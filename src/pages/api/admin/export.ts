@@ -13,7 +13,7 @@ interface ExportOptions {
 
 function csvEscape(value: string): string {
   if (/[",\n]/.test(value)) {
-    return `"${value.replace(/"/g, '""')}"`;
+    return `"${value.replaceAll('"', '""')}"`;
   }
   return value;
 }
@@ -67,7 +67,7 @@ async function exportComments(options: ExportOptions): Promise<string> {
       comment.nickname || comment.username || "",
       comment.email || "",
       comment.content
-        ? comment.content.replace(/</g, "&lt;").replace(/>/g, "&gt;")
+        ? comment.content.replaceAll("<", "&lt;").replaceAll(">", "&gt;")
         : "",
       comment.slug || comment.postId || "",
       comment.createdAt ? new Date(comment.createdAt).toISOString() : "",

@@ -426,8 +426,7 @@ const CommentsManager: React.FC = () => {
               className="btn btn-outline btn-sm"
               onClick={clearFilters}
             >
-              <i className="ri-refresh-line mr-1" />
-              清除筛选
+              <i className="ri-refresh-line mr-1" /> 清除筛选
             </button>
           </div>
         </div>
@@ -445,8 +444,7 @@ const CommentsManager: React.FC = () => {
                   className="btn btn-primary btn-sm"
                   onClick={() => handleBulkOperation({ action: "mark-admin" })}
                 >
-                  <i className="ri-admin-line mr-1" />
-                  标记为管理员
+                  <i className="ri-admin-line mr-1" /> 标记为管理员
                 </button>
                 <button
                   type="button"
@@ -455,16 +453,14 @@ const CommentsManager: React.FC = () => {
                     handleBulkOperation({ action: "unmark-admin" })
                   }
                 >
-                  <i className="ri-user-line mr-1" />
-                  取消管理员标记
+                  <i className="ri-user-line mr-1" /> 取消管理员标记
                 </button>
                 <button
                   type="button"
                   className="btn btn-error btn-sm"
                   onClick={() => handleBulkOperation({ action: "delete" })}
                 >
-                  <i className="ri-delete-bin-line mr-1" />
-                  批量删除
+                  <i className="ri-delete-bin-line mr-1" /> 批量删除
                 </button>
               </div>
             </div>
@@ -576,12 +572,11 @@ const CommentsManager: React.FC = () => {
                             >
                               {isExpanded ? (
                                 <>
-                                  <i className="ri-arrow-up-s-line mr-1" />
-                                  收起
+                                  <i className="ri-arrow-up-s-line mr-1" /> 收起
                                 </>
                               ) : (
                                 <>
-                                  <i className="ri-arrow-down-s-line mr-1" />
+                                  <i className="ri-arrow-down-s-line mr-1" />{" "}
                                   展开
                                 </>
                               )}
@@ -732,7 +727,7 @@ const CommentsManager: React.FC = () => {
 
         {!loading && filteredComments.length === 0 && (
           <div className="text-center py-16 text-base-content/50">
-            <i className="ri-emotion-unhappy-line text-2xl mb-2" />
+            <i className="ri-emotion-unhappy-line text-2xl mb-2" />{" "}
             <p>暂无评论</p>
           </div>
         )}
